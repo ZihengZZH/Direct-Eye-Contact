@@ -409,11 +409,7 @@ void Calibrate::readPara(void)
 
 void Calibrate::rectifyImage(std::string faceL, std::string faceR)
 {
-	/*if (M1.empty() || M2.empty() || D1.empty() || D2.empty() || R.empty() || T.empty()
-		|| R1.empty() || R2.empty() || P1.empty() || P2.empty() || Q.empty())
-	{
-		readPara();
-	}*/
+	
 	readPara();
 	cv::Size imageSize;
 	cv::Mat rmap[2][2];
