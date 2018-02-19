@@ -12,6 +12,7 @@ public:
 	cv::Mat imgLeft_col, imgRight_col;
 	dlib::full_object_detection shapes_L, shapes_R;
 	std::vector<std::vector<double>> depth_data;
+	bool if_landmark = false;
 
 	// face detection and pose estimation parameters 
 	dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
@@ -19,7 +20,6 @@ public:
 	std::vector<int> facial_point = { 0,17,22,27,31,36 };
 	std::vector<std::vector<int>> facial_circle = { { 36,41 },{ 42,47 },{ 48,59 },{ 60,67 } };
 	
-
 public:
 	FaceDepth() {
 		dlib::deserialize("database/shape_predictor_68_face_landmarks.dat") >> pose_model;
@@ -36,20 +36,30 @@ public:
 	void calDepth(void);
 };
 
+
 /*
-10 Feb
-Use dispariy value first
+	10 Feb
+	Use dispariy value first
 
-squareSize is important for the calibration as it determines the relationship
-the square size is the side length of each square on the chessboard
-in the experiment, it is 25mm, which is 0.025f
-And the baseline is measured 10cm / 100mm / 0.1m
+	squareSize is important for the calibration as it determines the relationship
+	the square size is the side length of each square on the chessboard
+	in the experiment, it is 25mm, which is 0.025f
+	And the baseline is measured 10cm / 100mm / 0.1m
 
-focal length is another vital aspect
-in the camera matrix, fx and fy should have the same value, which is measured in pixels
-C920 sensor size 5.14mm * 3.50mm
-optical resolution 3MP	2048*1536
-Fx = fx * W / w
-focal length 3.67mm
+	focal length is another vital aspect
+	in the camera matrix, fx and fy should have the same value, which is measured in pixels
+	C920 sensor size 5.14mm * 3.50mm
+	optical resolution 3MP	2048*1536
+	Fx = fx * W / w
+	focal length 3.67mm
+
+	19 Feb
+	Z = fB/d
+	where
+	Z = distance along the camera Z axis
+	f = focal length (in pixels)
+	B = baseline (in metres)
+	d = disparity (in pixels)
+	SO no need to worry the sensor size
 
 */

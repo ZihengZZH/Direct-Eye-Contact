@@ -119,7 +119,8 @@ void FaceDepth::facialLandmark(cv::Mat temp, bool left)
 			//  shapes[0].part(i).x();
 			// std::cout << "No" << i << " x " << shapes[0].part(i).x() << "\ty " << shapes[0].part(i).y() << std::endl;
 		}*/
-		for (int i = 0; i < 68; i++)
+
+		/*for (int i = 0; i < 68; i++)
 		{
 			circle(temp, cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()),
 				3, cv::Scalar(0, 255, 0), -1);
@@ -142,9 +143,12 @@ void FaceDepth::facialLandmark(cv::Mat temp, bool left)
 			}
 			cv::line(temp, cv::Point(shapes[0].part(point[1]).x(), shapes[0].part(point[1]).y()),
 				cv::Point(shapes[0].part(point[0]).x(), shapes[0].part(point[0]).y()), cv::Scalar(0, 255, 0));
-		}
+		}*/
 
+		if_landmark = true;
 	}
+	else
+		if_landmark = false;
 
 	if (left)
 		shapes_L = shapes[0];
@@ -161,6 +165,7 @@ void FaceDepth::facialLandmark(cv::Mat temp, bool left)
 	cv::destroyAllWindows();*/
 
 }
+
 
 cv::Mat FaceDepth::facialLandmarkReal(cv::Mat frame)
 {

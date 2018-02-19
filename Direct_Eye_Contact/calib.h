@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 class Calibrate
 {
 
@@ -43,7 +45,6 @@ private:
 public:
 	// calibration parameters
 	cv::Mat M1, M2, D1, D2, R, T, R1, R2, P1, P2, Q;
-
 
 public:
 	Calibrate() {};
