@@ -2,6 +2,15 @@
 #include "faceDepth.h"
 
 
+FaceDepth::FaceDepth()
+{
+	dlib::deserialize("database/shape_predictor_68_face_landmarks.dat") >> pose_model;
+	depth_data.clear();
+	original_pos.clear();
+	virtual_pos.clear();
+}
+
+
 void FaceDepth::readPara(void)
 {
 	cv::FileStorage fs;
@@ -24,6 +33,8 @@ void FaceDepth::readPara(void)
 	[ 0   0   1 ]
 	fx, fy: focal length
 	cx, cy: principal point coordinates
+	resolution: 640 * 480 pixel
+	sensor-size: 5.14 * 3.5 mm
 	*/
 
 	fs.open("calib_xml/extrinsics.yml", cv::FileStorage::READ);
@@ -44,8 +55,8 @@ void FaceDepth::readPara(void)
 	Q.convertTo(Q, CV_64F);
 
 	focal = (M1.ptr<double>(0)[0] + M1.ptr<double>(1)[1]
-		+ M2.ptr<double>(0)[0] + M2.ptr<double>(1)[1]) / 4;
-	baseline = 1 / Q.ptr<double>(3)[2];
+		+ M2.ptr<double>(0)[0] + M2.ptr<double>(1)[1]) / 4; // in pixel
+	baseline = 1 / Q.ptr<double>(3)[2]; // in meters
 
 }
 
@@ -93,7 +104,6 @@ void FaceDepth::disparityMap(int ndisparities, int SADWindowSize)
 	cv::imshow("Right view", imgRight_col);
 	cv::imshow("Disparity map", imgDisparity8U);
 	cv::waitKey();
-
 }
 
 
@@ -110,67 +120,24 @@ void FaceDepth::facialLandmark(cv::Mat temp, bool left)
 
 	if (!shapes.empty())
 	{
-		/*for (int i = 0; i < 68; i++)
-		{
-			circle(temp, cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()),
-				3, cv::Scalar(0, 0, 255), -1);
-			putText(temp, std::to_string(i), cvPoint(shapes[0].part(i).x(),
-				shapes[0].part(i).y()), CV_FONT_HERSHEY_PLAIN, 1, cv::Scalar(255, 0, 0), 1, 4);
-			//  shapes[0].part(i).x();
-			// std::cout << "No" << i << " x " << shapes[0].part(i).x() << "\ty " << shapes[0].part(i).y() << std::endl;
-		}*/
-
-		/*for (int i = 0; i < 68; i++)
-		{
-			circle(temp, cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()),
-				3, cv::Scalar(0, 255, 0), -1);
-		}
-
-		for (int iter = 0; iter != facial_point.size() - 1; iter++)
-		{
-			for (int i = facial_point[iter]; i != facial_point[iter + 1] - 1; i++)
-			{
-				cv::line(temp, cv::Point(shapes[0].part(i).x(), shapes[0].part(i).y()),
-					cv::Point(shapes[0].part(i + 1).x(), shapes[0].part(i + 1).y()), cv::Scalar(0, 255, 0));
-			}
-		}
-		for (auto point : facial_circle)
-		{
-			for (int i = point[0]; i != point[1]; i++)
-			{
-				cv::line(temp, cv::Point(shapes[0].part(i).x(), shapes[0].part(i).y()),
-					cv::Point(shapes[0].part(i + 1).x(), shapes[0].part(i + 1).y()), cv::Scalar(0, 255, 0));
-			}
-			cv::line(temp, cv::Point(shapes[0].part(point[1]).x(), shapes[0].part(point[1]).y()),
-				cv::Point(shapes[0].part(point[0]).x(), shapes[0].part(point[0]).y()), cv::Scalar(0, 255, 0));
-		}*/
-
-		if_landmark = true;
+		// not necessary to draw the facial landmarks
 	}
-	else
-		if_landmark = false;
 
 	if (left)
 		shapes_L = shapes[0];
 	else
 		shapes_R = shapes[0];
 
-	//Display it all on the screen  
-	/*cv::imshow("Dlib facial landmarks", temp);
-	char c = (char)cv::waitKey(1);
-	if (c == 27)
-	{
-		return;
-	}
-	cv::destroyAllWindows();*/
-
 }
 
 
-cv::Mat FaceDepth::facialLandmarkReal(cv::Mat frame)
+cv::Mat FaceDepth::facialLandmarkReal(bool left)
 {
 	cv::Mat frame_facial;
-	frame.copyTo(frame_facial);
+	if (left)
+		imgLeft_col.copyTo(frame_facial);
+	else
+		imgRight_col.copyTo(frame_facial);
 
 	dlib::cv_image<dlib::bgr_pixel> cimg(frame_facial);
 	// Detect faces
@@ -182,15 +149,6 @@ cv::Mat FaceDepth::facialLandmarkReal(cv::Mat frame)
 
 	if (!shapes.empty())
 	{
-		/*for (int i = 0; i < 68; i++)
-		{
-		circle(temp, cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()),
-		3, cv::Scalar(0, 0, 255), -1);
-		putText(temp, std::to_string(i), cvPoint(shapes[0].part(i).x(),
-		shapes[0].part(i).y()), CV_FONT_HERSHEY_PLAIN, 1, cv::Scalar(255, 0, 0), 1, 4);
-		//  shapes[0].part(i).x();
-		// std::cout << "No" << i << " x " << shapes[0].part(i).x() << "\ty " << shapes[0].part(i).y() << std::endl;
-		}*/
 		for (int i = 0; i < 68; i++)
 		{
 			circle(frame_facial, cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()),
@@ -222,8 +180,10 @@ cv::Mat FaceDepth::facialLandmarkReal(cv::Mat frame)
 }
 
 
-void FaceDepth::drawLines(void)
+cv::Mat FaceDepth::drawLines(void)
 {
+	// RUN facialLandmark FIRST
+
 	cv::Mat img1 = imgLeft_col, img2 = imgRight_col;
 
 	int rows = std::max(img1.rows, img2.rows);
@@ -243,15 +203,8 @@ void FaceDepth::drawLines(void)
 	{
 		cv::line(img_res, cv::Point(shapes_L.part(i).x(), shapes_L.part(i).y()),
 			cv::Point(shapes_R.part(i).x() + img1.cols, shapes_R.part(i).y()), cv::Scalar(0, 255, 0));
-		/*std::cout << "No" << i << " x " << shapes_L.part(i).x() << " " << shapes_R.part(i).x()
-		<< "\ty " << shapes_L.part(i).y() << " " << shapes_R.part(i).y() << std::endl;*/
 	}
-
-	cv::imshow("matches", img_res);
-	char key = (char)cv::waitKey();
-	if (key == 27)
-		return;
-	cv::destroyAllWindows();
+	return img_res;
 }
 
 
@@ -270,27 +223,60 @@ void FaceDepth::saveFile(cv::Mat img_mat)
 
 void FaceDepth::calDepth(void)
 {
-	imgLeft_col = cv::imread("test_image/face_rec0_L.jpg", 1); //face_rec0.jpg
-	imgRight_col = cv::imread("test_image/face_rec1_R.jpg", 1); //face_rec1.jpg
+	// READ PARAMETERS FIRST
+	//readPara();
+	//std::cout << "focal length " << focal << std::endl;
+	//std::cout << "baseline " << baseline << std::endl;
 
-	readPara();
-	focal = 0.00367; // unit mt
-	std::cout << "focal length " << focal << std::endl;
-	std::cout << "baseline " << baseline << std::endl;
 	facialLandmark(imgLeft_col, true);
 	facialLandmark(imgRight_col, false);
 
-	std::cout << "LEFT & RIGHT\n";
+	depth_data.clear();
 	for (int i = 0; i < 68; i++)
 	{
 		dispar = double(shapes_L.part(i).x() - shapes_R.part(i).x());
 		depth = baseline * focal / dispar; // depth computation
-		std::cout << "No" << i << " x " << shapes_L.part(i).x() << " " << shapes_R.part(i).x()
+
+		/*std::cout << "No" << i << " x " << shapes_L.part(i).x() << " " << shapes_R.part(i).x()
 			<< "\ty " << shapes_L.part(i).y() << " " << shapes_R.part(i).y() << "\t disp " << dispar
-			<< "\t depth " << depth << std::endl;
-		//std::vector<double> depth_d = { (double)i, (double)shapes_L.part(i).x(), (double)shapes_L.part(i).y(), depth };
-		//depth_data.push_back(depth_d);
+			<< "\t depth " << depth << std::endl;*/
+		depth_data.push_back(depth);
 	}
 
-	drawLines();
+	//drawLines();
+}
+
+
+void FaceDepth::calTranslation(bool vir_cam)
+{
+	// READ PARAMETERS FIRST
+	//readPara();
+	//std::cout << "focal length " << focal << std::endl;
+	//std::cout << "baseline " << baseline << std::endl;
+	
+	cv::Mat mat_L, mat_R;
+	double dist = 0;
+	std::vector<double> distance;
+	//cv::undistort(imgLeft_col, mat_L, M1, D1);
+	//cv::undistort(imgRight_col, mat_R, M2, D2);
+	calDepth();
+
+	if (!vir_cam)
+		original_pos = depth_data;
+	else
+		virtual_pos = depth_data;
+
+	if (!original_pos.empty() && !virtual_pos.empty())
+	{
+		for (int i = 0; i < 68; i++)
+		{
+			std::cout << i << "\t ori " << original_pos[i] << "\t vir " << virtual_pos[i] << std::endl;
+			dist = sqrt(pow(virtual_pos[i], 2) - pow(original_pos[i], 2)); 
+			std::cout << i << " distance " << dist << std::endl;
+			distance.push_back(dist);
+		}
+		dist = std::accumulate(distance.begin(), distance.end(), 0.0) / distance.size();
+		std::cout << "DISTANCE " << dist << std::endl;
+	}
+
 }
