@@ -10,9 +10,12 @@ public:
 
 	cv::Mat imgLeft_col, imgRight_col; // undistort frame from web-cam
 	dlib::full_object_detection shapes_L, shapes_R;
+	std::vector<cv::Point2f> points_L, points_R;
+	// the coordinates may be easier to be accessed in vector
+
 	std::vector<double> depth_data; // depth data of landmarks
-	std::vector<double> original_pos;
-	std::vector<double> virtual_pos;
+	std::vector<double> original_pos, virtual_pos;
+	std::vector<std::pair<int, double>> depth_data_index, level_1, level_2, level_3;
 
 private:
 	// face detection and pose estimation parameters 
@@ -20,7 +23,16 @@ private:
 	dlib::shape_predictor pose_model;
 	std::vector<int> facial_point = { 0,17,22,27,31,36 };
 	std::vector<std::vector<int>> facial_circle = { { 36,41 },{ 42,47 },{ 48,59 },{ 60,67 } };
-	
+
+	struct CmpByValue
+	{
+		bool operator()
+			(const std::pair<int, double> & lhs, const std::pair<int, double> & rhs)
+		{
+			return lhs.second > rhs.second;
+		}
+	};
+
 public:
 	FaceDepth();
 	~FaceDepth() {};
@@ -30,12 +42,15 @@ public:
 	void readPara(void);
 	void disparityMap(int ndisparities, int SADWindowSize);
 
-	void facialLandmark(cv::Mat temp, bool left); 
+	void facialLandmark(cv::Mat temp, bool left);
 	// store the shape of landmarks
-	cv::Mat facialLandmarkReal(bool left); 
+	cv::Mat facialLandmarkReal(bool left);
 	// return mat in real-time
 	cv::Mat drawLines(void);
 
+	void retrivePoints(void);
+	void separateLevel(void);
+	void drawLevel(cv::Mat& img);
 	void saveFile(cv::Mat img_mat);
 	void calDepth(void);
 	void calTranslation(bool vir_cam); // not suitable yet

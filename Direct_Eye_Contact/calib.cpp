@@ -54,7 +54,7 @@ bool Calibrate::readStringList(const std::string& filename, std::vector<std::str
 
 void Calibrate::saveTestImage(void)
 {
-	
+
 	if (openCamera())
 	{
 		while (true)
@@ -106,7 +106,7 @@ std::vector<cv::Point3f> Calibrate::Create3DChessboardCorners(cv::Size boardSize
 
 void Calibrate::stereoCalib(void)
 {
-	displayHelp(); 
+	displayHelp();
 	readStringList(img_list, imageList);
 	if (saveTestImg)
 	{
@@ -409,7 +409,7 @@ void Calibrate::readPara(void)
 
 void Calibrate::rectifyImage(std::string faceL, std::string faceR)
 {
-	
+
 	readPara();
 	cv::Size imageSize;
 	cv::Mat rmap[2][2];

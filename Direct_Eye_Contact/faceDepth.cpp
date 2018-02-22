@@ -155,7 +155,7 @@ cv::Mat FaceDepth::facialLandmarkReal(bool left)
 	for (unsigned long i = 0; i < faces.size(); ++i)
 		shapes.push_back(pose_model(cimg, faces[i]));
 
-	
+
 	if (!shapes.empty())
 	{
 		int border_h = shapes[0].part(36).x() - shapes[0].part(0).x();
@@ -227,6 +227,59 @@ cv::Mat FaceDepth::drawLines(void)
 }
 
 
+void FaceDepth::retrivePoints(void)
+{
+	points_L.clear();
+	points_R.clear();
+
+#pragma omp parallel
+#pragma omp for
+	for (int k = 0; k < 68; k++)
+	{
+		points_L.push_back(cv::Point2f(shapes_L.part(k).x(), shapes_L.part(k).y()));
+		points_R.push_back(cv::Point2f(shapes_R.part(k).x(), shapes_R.part(k).y()));
+	}
+}
+
+
+void FaceDepth::separateLevel(void)
+{
+	std::sort(depth_data_index.begin(), depth_data_index.end(), CmpByValue());
+
+	int number = depth_data_index.size() / 3;
+
+#pragma omp parallel
+#pragma omp for
+	for (int i = 0; i < depth_data_index.size(); i++)
+	{
+		if (i > number * 2)
+			level_3.push_back(depth_data_index[i]);
+		else if (i > number * 1)
+			level_2.push_back(depth_data_index[i]);
+		else
+			level_1.push_back(depth_data_index[i]);
+	}
+}
+
+
+void FaceDepth::drawLevel(cv::Mat & img)
+{
+	// Scalar BGR (Blue Green Red)
+	for (auto one : level_1)
+	{
+		cv::circle(img, points_L[one.first], 2, cv::Scalar(255, 0, 0)); // BLUE
+	}
+	for (auto two : level_2)
+	{
+		cv::circle(img, points_L[two.first], 2, cv::Scalar(0, 255, 0)); // GREEN
+	}
+	for (auto three : level_3)
+	{
+		cv::circle(img, points_L[three.first], 2, cv::Scalar(0, 0, 255)); // BLUE
+	}
+}
+
+
 void FaceDepth::saveFile(cv::Mat img_mat)
 {
 	cv::FileStorage file;
@@ -260,6 +313,7 @@ void FaceDepth::calDepth(void)
 			<< "\ty " << shapes_L.part(i).y() << " " << shapes_R.part(i).y() << "\t disp " << dispar
 			<< "\t depth " << depth << std::endl;*/
 		depth_data.push_back(depth);
+		depth_data_index.push_back(std::make_pair(i, depth));
 	}
 
 	//drawLines();
@@ -272,7 +326,7 @@ void FaceDepth::calTranslation(bool vir_cam)
 	//readPara();
 	//std::cout << "focal length " << focal << std::endl;
 	//std::cout << "baseline " << baseline << std::endl;
-	
+
 	cv::Mat mat_L, mat_R;
 	double dist = 0;
 	std::vector<double> distance;
@@ -290,7 +344,7 @@ void FaceDepth::calTranslation(bool vir_cam)
 		for (int i = 0; i < 68; i++)
 		{
 			std::cout << i << "\t ori " << original_pos[i] << "\t vir " << virtual_pos[i] << std::endl;
-			dist = sqrt(pow(virtual_pos[i], 2) - pow(original_pos[i], 2)); 
+			dist = sqrt(pow(virtual_pos[i], 2) - pow(original_pos[i], 2));
 			std::cout << i << " distance " << dist << std::endl;
 			distance.push_back(dist);
 		}
