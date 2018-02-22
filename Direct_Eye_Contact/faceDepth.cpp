@@ -11,6 +11,12 @@ FaceDepth::FaceDepth()
 }
 
 
+cv::Rect FaceDepth::dlib2opencv(dlib::rectangle r)
+{
+	return cv::Rect(cv::Point2i(r.left(), r.top()), cv::Point2i(r.right() + 1, r.bottom() + 1));
+}
+
+
 void FaceDepth::readPara(void)
 {
 	cv::FileStorage fs;
@@ -107,6 +113,7 @@ void FaceDepth::disparityMap(int ndisparities, int SADWindowSize)
 }
 
 
+// store the shape of landmarks to the shape variable
 void FaceDepth::facialLandmark(cv::Mat temp, bool left)
 {
 
@@ -131,6 +138,7 @@ void FaceDepth::facialLandmark(cv::Mat temp, bool left)
 }
 
 
+// Return the frame with drawing to display
 cv::Mat FaceDepth::facialLandmarkReal(bool left)
 {
 	cv::Mat frame_facial;
@@ -147,12 +155,23 @@ cv::Mat FaceDepth::facialLandmarkReal(bool left)
 	for (unsigned long i = 0; i < faces.size(); ++i)
 		shapes.push_back(pose_model(cimg, faces[i]));
 
+	
 	if (!shapes.empty())
 	{
+		int border_h = shapes[0].part(36).x() - shapes[0].part(0).x();
+		int border_v = shapes[0].part(38).y() - shapes[0].part(19).y();
+
+		cv::Rect face = dlib2opencv(faces[0]);
+		face.x -= border_h;
+		face.y -= border_v;
+		face.width += border_h * 2;
+		face.height += border_v * 2;
+		cv::rectangle(frame_facial, face, cv::Scalar(0, 255, 0), 0.7);
+
 		for (int i = 0; i < 68; i++)
 		{
 			circle(frame_facial, cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()),
-				3, cv::Scalar(0, 255, 0), -1);
+				2, cv::Scalar(0, 255, 0), -1);
 		}
 
 		for (int iter = 0; iter != facial_point.size() - 1; iter++)

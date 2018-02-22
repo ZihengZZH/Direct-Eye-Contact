@@ -7,8 +7,6 @@ class FaceDepth
 public:
 	cv::Mat M1, M2, D1, D2, R, T, R1, R2, P1, P2, Q;
 	double focal, baseline, dispar, depth;
-	int const max_BINARY_value = 255;
-	cv::Mat kernel = cv::Mat(cv::Size(12, 12), CV_8UC1);
 
 	cv::Mat imgLeft_col, imgRight_col; // undistort frame from web-cam
 	dlib::full_object_detection shapes_L, shapes_R;
@@ -28,6 +26,7 @@ public:
 	~FaceDepth() {};
 
 public:
+	cv::Rect dlib2opencv(dlib::rectangle r);
 	void readPara(void);
 	void disparityMap(int ndisparities, int SADWindowSize);
 
