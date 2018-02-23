@@ -114,10 +114,15 @@ void FaceDepth::disparityMap(int ndisparities, int SADWindowSize)
 
 
 // store the shape of landmarks to the shape variable
-void FaceDepth::facialLandmark(cv::Mat temp, bool left)
+bool FaceDepth::facialLandmark(bool left)
 {
+	cv::Mat frame_facial;
+	if (left)
+		imgLeft_col.copyTo(frame_facial);
+	else
+		imgRight_col.copyTo(frame_facial);
 
-	dlib::cv_image<dlib::bgr_pixel> cimg(temp);
+	dlib::cv_image<dlib::bgr_pixel> cimg(frame_facial);
 	// Detect faces
 	std::vector<dlib::rectangle> faces = detector(cimg);
 	// Find the pose of each face. 
@@ -128,12 +133,15 @@ void FaceDepth::facialLandmark(cv::Mat temp, bool left)
 	if (!shapes.empty())
 	{
 		// not necessary to draw the facial landmarks
-	}
+		if (left)
+			shapes_L = shapes[0];
+		else
+			shapes_R = shapes[0];
 
-	if (left)
-		shapes_L = shapes[0];
+		return true;
+	}
 	else
-		shapes_R = shapes[0];
+		return false;
 
 }
 
@@ -227,23 +235,26 @@ cv::Mat FaceDepth::drawLines(void)
 }
 
 
-void FaceDepth::retrivePoints(void)
+void FaceDepth::separateLevel(void)
 {
-	points_L.clear();
-	points_R.clear();
+	
+}
+
+
+void FaceDepth::drawLevel(cv::Mat& img)
+{
+	std::vector<std::pair<int, double>> level_1, level_2, level_3;
+	std::vector<cv::Point2f> points_L = std::vector<cv::Point2f>(68);
+	std::vector<cv::Point2f> points_R = std::vector<cv::Point2f>(68);
 
 #pragma omp parallel
 #pragma omp for
 	for (int k = 0; k < 68; k++)
 	{
-		points_L.push_back(cv::Point2f(shapes_L.part(k).x(), shapes_L.part(k).y()));
-		points_R.push_back(cv::Point2f(shapes_R.part(k).x(), shapes_R.part(k).y()));
+		points_L[k] = cv::Point2f(shapes_L.part(k).x(), shapes_L.part(k).y());
+		points_R[k] = cv::Point2f(shapes_R.part(k).x(), shapes_R.part(k).y());
 	}
-}
 
-
-void FaceDepth::separateLevel(void)
-{
 	std::sort(depth_data_index.begin(), depth_data_index.end(), CmpByValue());
 
 	int number = depth_data_index.size() / 3;
@@ -259,11 +270,7 @@ void FaceDepth::separateLevel(void)
 		else
 			level_1.push_back(depth_data_index[i]);
 	}
-}
 
-
-void FaceDepth::drawLevel(cv::Mat & img)
-{
 	// Scalar BGR (Blue Green Red)
 	for (auto one : level_1)
 	{
@@ -275,7 +282,7 @@ void FaceDepth::drawLevel(cv::Mat & img)
 	}
 	for (auto three : level_3)
 	{
-		cv::circle(img, points_L[three.first], 2, cv::Scalar(0, 0, 255)); // BLUE
+		cv::circle(img, points_L[three.first], 2, cv::Scalar(0, 0, 255)); // RED
 	}
 }
 
@@ -300,10 +307,11 @@ void FaceDepth::calDepth(void)
 	//std::cout << "focal length " << focal << std::endl;
 	//std::cout << "baseline " << baseline << std::endl;
 
-	facialLandmark(imgLeft_col, true);
-	facialLandmark(imgRight_col, false);
+	//facialLandmark(true);
+	//facialLandmark(false);
 
-	depth_data.clear();
+	//depth_data.clear();
+
 	for (int i = 0; i < 68; i++)
 	{
 		dispar = double(shapes_L.part(i).x() - shapes_R.part(i).x());
@@ -312,8 +320,8 @@ void FaceDepth::calDepth(void)
 		/*std::cout << "No" << i << " x " << shapes_L.part(i).x() << " " << shapes_R.part(i).x()
 			<< "\ty " << shapes_L.part(i).y() << " " << shapes_R.part(i).y() << "\t disp " << dispar
 			<< "\t depth " << depth << std::endl;*/
-		depth_data.push_back(depth);
-		depth_data_index.push_back(std::make_pair(i, depth));
+		//depth_data.push_back(depth);
+		depth_data_index[i] = std::make_pair(i, depth);
 	}
 
 	//drawLines();
