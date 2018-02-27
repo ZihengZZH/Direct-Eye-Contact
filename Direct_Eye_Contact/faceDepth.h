@@ -10,10 +10,7 @@ public:
 
 	cv::Mat imgLeft_col, imgRight_col; // undistort frame from web-cam
 	dlib::full_object_detection shapes_L, shapes_R;
-	//std::vector<cv::Point2f> points_L = std::vector<cv::Point2f>(68);
-	//std::vector<cv::Point2f> points_R = std::vector<cv::Point2f>(68);
-	// the coordinates may be easier to be accessed in vector
-
+	
 	std::vector<double> depth_data; // depth data of landmarks
 	std::vector<double> original_pos, virtual_pos;
 	std::vector<std::pair<int, double>> depth_data_index = std::vector<std::pair<int, double>>(68);
@@ -50,8 +47,7 @@ public:
 	// return mat in real-time
 	cv::Mat drawLines(void);
 
-	void separateLevel(void);
-	void drawLevel(cv::Mat& img);
+	void levelDepth(cv::Mat& img);
 	void saveFile(cv::Mat img_mat);
 	void calDepth(void);
 	void calTranslation(bool vir_cam); // not suitable yet

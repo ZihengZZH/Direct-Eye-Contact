@@ -235,32 +235,25 @@ cv::Mat FaceDepth::drawLines(void)
 }
 
 
-void FaceDepth::separateLevel(void)
+void FaceDepth::levelDepth(cv::Mat& img)
 {
+	std::vector<std::pair<int, double>> level_1, level_2, level_3; // 3 closest
+	// the coordinates may be easier to be accessed in vector
+	std::vector<cv::Point2i> points_L, points_R, convexHull;
+	std::vector<cv::Point2i> points_1, points_2, points_3;
+	std::vector<cv::Point2i> contour_1, contour_2, contour_3;
+	bool show_points = false;
 	
-}
-
-
-void FaceDepth::drawLevel(cv::Mat& img)
-{
-	std::vector<std::pair<int, double>> level_1, level_2, level_3;
-	std::vector<cv::Point2f> points_L = std::vector<cv::Point2f>(68);
-	std::vector<cv::Point2f> points_R = std::vector<cv::Point2f>(68);
-
-#pragma omp parallel
-#pragma omp for
 	for (int k = 0; k < 68; k++)
 	{
-		points_L[k] = cv::Point2f(shapes_L.part(k).x(), shapes_L.part(k).y());
-		points_R[k] = cv::Point2f(shapes_R.part(k).x(), shapes_R.part(k).y());
+		points_L.push_back(cv::Point2i(shapes_L.part(k).x(), shapes_L.part(k).y()));
+		points_R.push_back(cv::Point2i(shapes_R.part(k).x(), shapes_R.part(k).y()));
 	}
 
 	std::sort(depth_data_index.begin(), depth_data_index.end(), CmpByValue());
 
 	int number = depth_data_index.size() / 3;
 
-#pragma omp parallel
-#pragma omp for
 	for (int i = 0; i < depth_data_index.size(); i++)
 	{
 		if (i > number * 2)
@@ -274,16 +267,35 @@ void FaceDepth::drawLevel(cv::Mat& img)
 	// Scalar BGR (Blue Green Red)
 	for (auto one : level_1)
 	{
-		cv::circle(img, points_L[one.first], 2, cv::Scalar(255, 0, 0)); // BLUE
+		if (show_points)
+			cv::circle(img, points_L[one.first], 2, cv::Scalar(255, 0, 0)); // BLUE
+		points_1.push_back(points_L[one.first]);
 	}
 	for (auto two : level_2)
 	{
-		cv::circle(img, points_L[two.first], 2, cv::Scalar(0, 255, 0)); // GREEN
+		if (show_points)
+			cv::circle(img, points_L[two.first], 2, cv::Scalar(0, 255, 0)); // GREEN
+		points_2.push_back(points_L[two.first]);
 	}
 	for (auto three : level_3)
 	{
-		cv::circle(img, points_L[three.first], 2, cv::Scalar(0, 0, 255)); // RED
+		if (show_points)
+			cv::circle(img, points_L[three.first], 2, cv::Scalar(0, 0, 255)); // RED
+		points_3.push_back(points_L[three.first]);
 	}
+		
+	cv::convexHull(cv::Mat(points_1), convexHull, false);
+	cv::approxPolyDP(cv::Mat(convexHull), contour_1, 0.001, true);
+	cv::convexHull(cv::Mat(points_2), convexHull, false);
+	cv::approxPolyDP(cv::Mat(convexHull), contour_2, 0.001, true);
+	cv::convexHull(cv::Mat(points_3), convexHull, false);
+	cv::approxPolyDP(cv::Mat(convexHull), contour_3, 0.001, true);
+
+	cv::fillConvexPoly(img, contour_1, cv::Scalar(100,100,100));
+	cv::fillConvexPoly(img, contour_2, cv::Scalar(150,150,150));
+	cv::fillConvexPoly(img, contour_3, cv::Scalar(200,200,200));
+
+	// NO NEED TO DEALLOCATE THE VECTORS
 }
 
 
@@ -307,11 +319,6 @@ void FaceDepth::calDepth(void)
 	//std::cout << "focal length " << focal << std::endl;
 	//std::cout << "baseline " << baseline << std::endl;
 
-	//facialLandmark(true);
-	//facialLandmark(false);
-
-	//depth_data.clear();
-
 	for (int i = 0; i < 68; i++)
 	{
 		dispar = double(shapes_L.part(i).x() - shapes_R.part(i).x());
@@ -320,7 +327,7 @@ void FaceDepth::calDepth(void)
 		/*std::cout << "No" << i << " x " << shapes_L.part(i).x() << " " << shapes_R.part(i).x()
 			<< "\ty " << shapes_L.part(i).y() << " " << shapes_R.part(i).y() << "\t disp " << dispar
 			<< "\t depth " << depth << std::endl;*/
-		//depth_data.push_back(depth);
+			//depth_data.push_back(depth);
 		depth_data_index[i] = std::make_pair(i, depth);
 	}
 
