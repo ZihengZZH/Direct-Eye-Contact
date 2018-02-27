@@ -16,7 +16,6 @@ public:
 	std::vector<double> depth_data; // depth data of landmarks
 	std::vector<double> original_pos, virtual_pos;
 	std::vector<std::pair<int, double>> depth_data_index = std::vector<std::pair<int, double>>(68);
-	//std::vector<std::pair<int, double>> level_1, level_2, level_3;
 
 private:
 	// face detection and pose estimation parameters 
@@ -53,6 +52,9 @@ public:
 	void saveFile(cv::Mat img_mat);
 	void calDepth(void);
 	void calTranslation(bool vir_cam); // not suitable yet
+
+	void viewSynthesis(void);
+
 };
 
 
