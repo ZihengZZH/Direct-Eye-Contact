@@ -26,7 +26,7 @@ cv::Rect FaceDepth::dlib2opencv(dlib::rectangle r)
 }
 
 
-void FaceDepth::readPara(void)
+void FaceDepth::readParameter(void)
 {
 	cv::FileStorage fs;
 	fs.open("calib_xml/intrinsics.yml", cv::FileStorage::READ);
@@ -42,14 +42,14 @@ void FaceDepth::readPara(void)
 		std::cerr << "ERROR READING PARA\n";
 
 	/*
-	camera matrix M1 M2
-	[ fx  0  cx ]
-	[ 0  fy  cy ]
-	[ 0   0   1 ]
-	fx, fy: focal length
-	cx, cy: principal point coordinates
-	resolution: 640 * 480 pixel
-	sensor-size: 5.14 * 3.5 mm
+		camera matrix M1 M2
+		[ fx  0  cx ]
+		[ 0  fy  cy ]
+		[ 0   0   1 ]
+		fx, fy: focal length
+		cx, cy: principal point coordinates
+		resolution: 640 * 480 pixel
+		sensor-size: 5.14 * 3.5 mm
 	*/
 
 	fs.open("calib_xml/extrinsics.yml", cv::FileStorage::READ);
@@ -323,6 +323,7 @@ void FaceDepth::levelDepthVis(cv::Mat& img)
 {
 	std::vector<std::pair<int, double>> level_1, level_2, level_3; // 3 closest
 	// the coordinates may be easier to be accessed in vector
+	// Point2i (integer) vital to draw the convex polygon
 	std::vector<cv::Point2i> points_L, points_R, convexHull;
 	std::vector<cv::Point2i> points_1, points_2, points_3;
 	std::vector<cv::Point2i> contour_1, contour_2, contour_3;
@@ -399,7 +400,7 @@ void FaceDepth::saveFile(cv::Mat img_mat)
 void FaceDepth::calDepth(void)
 {
 	// READ PARAMETERS FIRST
-	//readPara();
+	//readParameter();
 	//std::cout << "focal length " << focal << std::endl;
 	//std::cout << "baseline " << baseline << std::endl;
 
@@ -422,7 +423,7 @@ void FaceDepth::calDepth(void)
 void FaceDepth::calTranslation(bool vir_cam)
 {
 	// READ PARAMETERS FIRST
-	//readPara();
+	//readParameter();
 	//std::cout << "focal length " << focal << std::endl;
 	//std::cout << "baseline " << baseline << std::endl;
 
@@ -461,6 +462,7 @@ void FaceDepth::viewSynthesis(void)
 	cv::Mat xy, mv;
 	std::vector<cv::Point3d> pvs;
 
+	// double fits CV_64F
 	Tv.convertTo(Tv, CV_64FC1);
 	Kv.convertTo(Kv, CV_64FC1);
 	Kl.convertTo(Kl, CV_64FC1);

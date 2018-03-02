@@ -2,15 +2,22 @@
 
 
 
+/* CLASS OF CAMERA CALIBRATION */
+// this class is responsible for the process of stereo camera calibration
+// it is one-time in the project, so only parameters are necessary to I/O
+
 class Calibrate
 {
 
 private:
+	// Whether attributes of web-cams stored in class remains determination
 	cv::VideoCapture cameraL;
 	cv::VideoCapture cameraR;
 	cv::Mat camera_matL;
 	cv::Mat camera_matR;
 	std::vector<std::string> imageList;
+
+	// 20 pairs of stereo images are recorded
 	const int times = 20;
 	int time = 0;
 	std::string img_list = "calib_xml/imageList.xml";
@@ -31,8 +38,8 @@ private:
 	/*
 	squareSize is important for the calibration as it determines the relationship
 	the square size is the side length of each square on the chessboard
-	in the experiment, it is 25mm, which is 0.025f
-	And the baseline is measured 10cm / 100mm / 0.1m
+	in this project, it is 25mm, which is 0.025f
+	And the baseline is explicitly measured 10cm / 100mm / 0.1m
 
 	focal length is another vital aspect
 	in the camera matrix, fx and fy should have the same value, which is measured in pixels
@@ -45,6 +52,23 @@ private:
 public:
 	// calibration parameters
 	cv::Mat M1, M2, D1, D2, R, T, R1, R2, P1, P2, Q;
+	/*
+		camera matrix M1 M2
+		[ fx  0  cx ]
+		[ 0  fy  cy ]
+		[ 0   0   1 ]
+		fx, fy: focal length
+		cx, cy: principal point coordinates
+	*/
+	// R1 - output 3*3 rectification transform (rotation matrix) for the first camera
+	// R2 - output 3*3 rectification transform (rotation matrix) for the second camera
+	// P1 - output 3*4 projection matrix in the new (rectified) coordinate systems for the first camera
+	// P2 - output 3*4 projection matrix in the new (rectified) coordinate systems for the second camera
+	// Q - output 4*4 disparity-to-depth mapping matrix
+	// R - output rotation matrix between the 1st and the 2nd camera coordinate systems
+	// T - output translation vector between the coordinate systems of the cameras
+	// E - output essential matrix
+	// F - output fundamental matrix
 
 public:
 	Calibrate() {};
@@ -57,7 +81,7 @@ public:
 	void saveImage(int id);
 	std::vector<cv::Point3f> Create3DChessboardCorners(cv::Size boardSize, float squareSize);
 	void stereoCalib(void);
-	void readPara(void);
+	void readParameter(void);
 	void rectifyImage(std::string faceL, std::string faceR);
 
 

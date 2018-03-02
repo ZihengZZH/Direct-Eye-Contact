@@ -5,6 +5,7 @@ class FaceDepth
 {
 
 public:
+	// calibration parameters
 	cv::Mat M1, M2, D1, D2, R, T, R1, R2, P1, P2, Q;
 	double focal, baseline, dispar, depth;
 
@@ -38,13 +39,13 @@ public:
 	~FaceDepth() {};
 
 public:
-	cv::Rect dlib2opencv(dlib::rectangle r);
-	void readPara(void);
+	cv::Rect dlib2opencv(dlib::rectangle r); // key transformation
+	void readParameter(void);
 	void disparityMap(int ndisparities, int SADWindowSize);
 
 	bool facialLandmark(bool left); // store the shape of landmarks
 	cv::Mat facialLandmarkVis(bool left); // return mat in real-time
-	cv::Mat drawLines(void);
+	cv::Mat drawLines(void); // visualise the corresponding results
 
 	void levelDepth(cv::Mat& img);
 	void levelDepthVis(cv::Mat& img);
@@ -81,6 +82,6 @@ public:
 	f = focal length (in pixels)
 	B = baseline (in metres)
 	d = disparity (in pixels)
-	SO no need to worry the sensor size
+	So no need to worry the sensor size
 
 */

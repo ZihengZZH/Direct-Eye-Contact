@@ -375,7 +375,7 @@ void Calibrate::stereoCalib(void)
 }
 
 
-void Calibrate::readPara(void)
+void Calibrate::readParameter(void)
 {
 	cv::FileStorage fs;
 	fs.open(cam_intri, cv::FileStorage::READ);
@@ -410,7 +410,7 @@ void Calibrate::readPara(void)
 void Calibrate::rectifyImage(std::string faceL, std::string faceR)
 {
 
-	readPara();
+	readParameter();
 	cv::Size imageSize;
 	cv::Mat rmap[2][2];
 	cv::Mat face0 = cv::imread(faceL, 0);
