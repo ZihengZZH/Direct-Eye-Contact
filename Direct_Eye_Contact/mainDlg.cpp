@@ -38,7 +38,18 @@ void CmainDlg::OnBnClickedOpen()
 	CRect rect;
 	GetDlgItem(IDC_CAM_L)->GetClientRect(&rect);
 	cv::Rect dst(rect.left, rect.top, rect.right, rect.bottom);
-	cv::resize(image, imagedst, cv::Size(rect.Width(), rect.Height()));
-	cv::imshow("view", imagedst);
+	//cv::resize(image, imagedst, cv::Size(rect.Width(), rect.Height()));
+	cv::imshow("view", image);
+
+	// OPTIONAL FOR PIC CONTROL SIZE
+	{
+		CEdit* pBoxOne;
+		pBoxOne = (CEdit*)GetDlgItem(IDC_CONSOLE);
+		CString str;
+		str.Format(_T("Width %3d Height %3d"), rect.Width(), rect.Height());
+		pBoxOne->SetWindowText(str);
+		str.ReleaseBuffer();
+	}
+
 
 }
