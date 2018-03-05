@@ -1,6 +1,11 @@
 #pragma once
 
 
+
+/* CLASS OF FACE DEPTH MAP */
+// this class is responsible for the depth map of human face region
+// and it is also responsible for view synthesis
+
 class FaceDepth
 {
 

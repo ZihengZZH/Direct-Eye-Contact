@@ -143,7 +143,7 @@
       <ConformanceMode>true</ConformanceMode>
       <OpenMPSupport>true</OpenMPSupport>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalOptions>-Zm110 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Zm200 %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Link>
@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClInclude Include="calib.h" />
     <ClInclude Include="faceDepth.h" />
+    <ClInclude Include="mainDlg.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -164,6 +165,7 @@
     <ClCompile Include="calib.cpp" />
     <ClCompile Include="faceDepth.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mainDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
