@@ -16,6 +16,7 @@ public:
 	cv::VideoCapture cap_L; // left camera 
 	cv::VideoCapture cap_R; // right camera
 	cv::Mat cap_mat_L, cap_mat_R;
+	cv::Mat mat_depth_standby, mat_synth_standby;
 	FaceDepth face;
 	BOOL if_landmarks, if_depth, if_synth;
 
@@ -30,5 +31,7 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedDepth();
 	afx_msg void OnBnClickedFacial();
+	afx_msg void OnBnClickedClose();
+	afx_msg void OnBnClickedSynth();
 };
 

@@ -28,6 +28,12 @@ BOOL CmainDlg::OnInitDialog()
 	::SetParent(hWnd_D, GetDlgItem(IDC_DEPTH)->m_hWnd);
 	::ShowWindow(hParent, SW_HIDE);
 
+	cv::namedWindow("synthesis", CV_WINDOW_AUTOSIZE);
+	HWND hWnd_S = (HWND)cvGetWindowHandle("synthesis");
+	hParent = ::GetParent(hWnd_S);
+	::SetParent(hWnd_S, GetDlgItem(IDC_SYNTH)->m_hWnd);
+	::ShowWindow(hParent, SW_HIDE);
+
 	cap_L = cv::VideoCapture(0);
 	cap_R = cv::VideoCapture(1);
 	if (!cap_L.isOpened() || !cap_R.isOpened())
@@ -35,6 +41,8 @@ BOOL CmainDlg::OnInitDialog()
 		AfxMessageBox(_T("UNABLE TO OPEN CAMERAS"));
 		return FALSE;
 	}
+	mat_depth_standby = cv::imread("./test_image/standby_depth.png");
+	mat_synth_standby = cv::imread("./test_image/standby_synth.png");
 
 	face.readParameter();
 
@@ -49,14 +57,16 @@ void CmainDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CmainDlg, CDialogEx)
 	ON_BN_CLICKED(ID_OPEN, &CmainDlg::OnBnClickedOpen)
 	ON_WM_TIMER()
-	ON_BN_CLICKED(ID_DEPTH, &CmainDlg::OnBnClickedDepth)
 	ON_BN_CLICKED(ID_FACIAL, &CmainDlg::OnBnClickedFacial)
+	ON_BN_CLICKED(ID_DEPTH, &CmainDlg::OnBnClickedDepth)
+	ON_BN_CLICKED(ID_SYNTH, &CmainDlg::OnBnClickedSynth)
+	ON_BN_CLICKED(ID_CLOSE, &CmainDlg::OnBnClickedClose)
 END_MESSAGE_MAP()
 
 void CmainDlg::OnBnClickedOpen()
 {
 	
-	if (false)
+	/*if (false)
 	{
 		std::string pic_path = "./test_image/test.jpg";
 		cv::Mat image = cv::imread(pic_path);
@@ -65,8 +75,8 @@ void CmainDlg::OnBnClickedOpen()
 
 	CRect rect;
 	GetDlgItem(IDC_CAM_L)->GetClientRect(&rect);
-	//cv::Rect dst(rect.left, rect.top, rect.right, rect.bottom);
-	//cv::resize(image, imagedst, cv::Size(rect.Width(), rect.Height()));
+	cv::Rect dst(rect.left, rect.top, rect.right, rect.bottom);
+	cv::resize(image, imagedst, cv::Size(rect.Width(), rect.Height()));
 
 	// OPTIONAL FOR PIC CONTROL SIZE
 	{
@@ -76,7 +86,7 @@ void CmainDlg::OnBnClickedOpen()
 		str.Format(_T("Width %3d Height %3d"), rect.Width(), rect.Height());
 		pBoxOne->SetWindowText(str);
 		str.ReleaseBuffer();
-	}
+	}*/
 
 	SetTimer(1, 10, NULL);
 }
@@ -111,11 +121,36 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 			cv::imshow("depth map", depth_mat);
 		}
 	}
+	else
+	{
+		CRect rect;
+		GetDlgItem(IDC_DEPTH)->GetClientRect(&rect);
+		cv::resize(mat_depth_standby, mat_depth_standby, cv::Size(rect.Width(), rect.Height()));
+		cv::imshow("depth map", mat_depth_standby);
+	}
+	
+	if (if_synth)
+	{
+
+	}
+	else
+	{
+		CRect rect;
+		GetDlgItem(IDC_SYNTH)->GetClientRect(&rect);
+		cv::resize(mat_synth_standby, mat_synth_standby, cv::Size(rect.Width(), rect.Height()));
+		cv::imshow("synthesis", mat_synth_standby);
+	}
 
 	cv::imshow("left view", cap_mat_L);
 	cv::imshow("right view", cap_mat_R);
 
 	CDialogEx::OnTimer(nIDEvent);
+}
+
+
+void CmainDlg::OnBnClickedFacial()
+{
+	if_landmarks = TRUE;
 }
 
 
@@ -125,7 +160,16 @@ void CmainDlg::OnBnClickedDepth()
 }
 
 
-void CmainDlg::OnBnClickedFacial()
+void CmainDlg::OnBnClickedSynth()
 {
-	if_landmarks = TRUE;
+	if_synth = TRUE;
 }
+
+
+void CmainDlg::OnBnClickedClose()
+{	
+	if_landmarks = FALSE;
+	if_depth = FALSE;
+	if_synth = FALSE;
+}
+
