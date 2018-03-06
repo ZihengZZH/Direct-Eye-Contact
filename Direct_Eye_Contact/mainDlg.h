@@ -1,6 +1,8 @@
 #pragma once
 
 #include "resource.h"
+#include "faceDepth.h"
+
 
 /* CLASS OF MFC DIALOG */
 // this class is responsible for MFC dialog design
@@ -11,6 +13,11 @@ public:
 	CmainDlg();
 	enum { IDD = IDD_MAIN };
 	BOOL OnInitDialog();
+	cv::VideoCapture cap_L; // left camera 
+	cv::VideoCapture cap_R; // right camera
+	cv::Mat cap_mat_L, cap_mat_R;
+	FaceDepth face;
+	BOOL if_landmarks, if_depth, if_synth;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
@@ -20,5 +27,8 @@ protected:
 
 public:
 	afx_msg void OnBnClickedOpen();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnBnClickedDepth();
+	afx_msg void OnBnClickedFacial();
 };
 

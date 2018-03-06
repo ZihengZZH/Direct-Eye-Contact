@@ -7,6 +7,11 @@
 #define ID_OPEN                         1002
 #define IDC_CAM_R                       1003
 #define IDC_CONSOLE                     1004
+#define IDC_DEPTH                       1005
+#define IDC_SYNTH                       1006
+#define ID_DEPTH                        1007
+#define ID_SYNTH                        1008
+#define ID_FACIAL                       1009
 
 // Next default values for new objects
 // 

@@ -457,38 +457,5 @@ void FaceDepth::calTranslation(bool vir_cam)
 
 void FaceDepth::viewSynthesis(void)
 {
-	cv::Mat Kv = M1, Kl = M1, Rv = R, R_vec, face_syn;
-	cv::Mat Tv = (cv::Mat_<float>(3, 1) << 0.0, 0.2, 0.0); // translation vector
-	cv::Mat xy, mv;
-	std::vector<cv::Point3d> pvs;
-
-	// double fits CV_64F
-	Tv.convertTo(Tv, CV_64FC1);
-	Kv.convertTo(Kv, CV_64FC1);
-	Kl.convertTo(Kl, CV_64FC1);
-	Rv.convertTo(Rv, CV_64FC1);
-	R_vec.convertTo(R_vec, CV_64FC1);
-	xy.convertTo(xy, CV_64FC1);
-	mv.convertTo(mv, CV_64FC1);
-
-	cv::Rodrigues(Rv, R_vec); // Converts a rotation matrix to a rotation vector or vice versa.
-	R_vec.convertTo(R_vec, CV_64FC1);
-
-	for (int i = 0; i < 246; i++)
-	{
-		for (int j = 0; j < 253; j++)
-		{
-			/*xy = (cv::Mat_<double>(3, 1) << (double)i, (double)j, 1.0);
-			float depth = depth_data.ptr<double>(i)[j];
-			mv = depth * Kl*Rv*Kl.inv()*xy + Kv * Tv;
-			cv::Point3d pv(mv);
-			pvs.push_back(pv);*/
-			// READ DEPTH MAP FROM FILE ???
-			// COMPUTATIONAL COST
-		}
-	}
-
-	// NOT PRACTICAL YET (WIRED)
-	//cv::projectPoints(pvs, R_vec, Tv, Kv, Mat(0, 3, CV_64FC1), face_syn); // Projects 3D points to an image plane.
-
+	
 }
