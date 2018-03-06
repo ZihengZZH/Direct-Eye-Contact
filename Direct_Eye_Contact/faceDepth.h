@@ -23,6 +23,13 @@ public:
 	std::vector<double> original_pos, virtual_pos;
 	std::vector<std::pair<int, double>> depth_data_index = std::vector<std::pair<int, double>>(68);
 
+	enum
+	{
+		USE_AVERAGE = 0,
+		USE_MEDIAN
+	};
+	int level_method;
+
 private:
 	// face detection and pose estimation parameters 
 	dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();

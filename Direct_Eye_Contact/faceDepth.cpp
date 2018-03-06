@@ -11,12 +11,26 @@ static void average_vec(std::vector<std::pair<int, double> >& temp, double& avg)
 }
 
 
+static void median_vec(std::vector<std::pair<int, double>>&temp, double& median)
+{
+	if (temp.size() % 2 == 0)
+	{
+		median = (temp[temp.size() / 2 - 1].second + temp[temp.size() / 2].second) / 2;
+	}
+	else
+	{
+		median = temp[temp.size() / 2].second;
+	}
+}
+
+
 FaceDepth::FaceDepth()
 {
 	dlib::deserialize("database/shape_predictor_68_face_landmarks.dat") >> pose_model;
 	depth_data.clear();
 	original_pos.clear();
 	virtual_pos.clear();
+	level_method = USE_MEDIAN;
 }
 
 
@@ -265,12 +279,16 @@ cv::Mat FaceDepth::drawLines(void)
 
 void FaceDepth::levelDepth(cv::Mat & img)
 {
-	std::vector<std::pair<int, double>> level_1, level_2, level_3; // 3 closest
+	std::vector<std::pair<int, double>> level_1, level_2, level_3; 
+	// 1 is farthest(largest) and 3 is closest(smallest)
 	// the coordinates may be easier to be accessed in vector
 	std::vector<cv::Point2i> points_L, points_R, convexHull;
 	std::vector<cv::Point2i> points_1, points_2, points_3;
 	std::vector<cv::Point2i> contour_1, contour_2, contour_3;
 	double average_1, average_2, average_3;
+	double median_1, median_2, median_3;
+	double level_val_0, level_val_1, level_val_2, level_val_3;
+	double backgound;
 	cv::Mat imgDepth64F = cv::Mat(img.rows, img.cols, CV_64F);
 
 	for (int k = 0; k < 68; k++)
@@ -283,6 +301,7 @@ void FaceDepth::levelDepth(cv::Mat & img)
 
 	int number = depth_data_index.size() / 3;
 
+	// the vectors are already sorted
 	for (int i = 0; i < depth_data_index.size(); i++)
 	{
 		if (i > number * 2)
@@ -292,10 +311,7 @@ void FaceDepth::levelDepth(cv::Mat & img)
 		else
 			level_1.push_back(depth_data_index[i]);
 	}
-	average_vec(level_1, average_1);
-	average_vec(level_2, average_2);
-	average_vec(level_3, average_3);
-
+	
 	for (auto one : level_1)
 		points_1.push_back(points_L[one.first]);
 	for (auto two : level_2)
@@ -310,10 +326,31 @@ void FaceDepth::levelDepth(cv::Mat & img)
 	cv::convexHull(cv::Mat(points_3), convexHull, false);
 	cv::approxPolyDP(cv::Mat(convexHull), contour_3, 0.001, true);
 
-	cv::rectangle(imgDepth64F, face_rect, cv::Scalar(average_1), CV_FILLED);
-	cv::fillConvexPoly(imgDepth64F, contour_1, cv::Scalar(average_1));
-	cv::fillConvexPoly(imgDepth64F, contour_2, cv::Scalar(average_2));
-	cv::fillConvexPoly(imgDepth64F, contour_3, cv::Scalar(average_3));
+	// TWO METHODS TO SET THE REPRESENTATIVE VALUE FOR EACH LEVEL
+	if (level_method == USE_AVERAGE)
+	{
+		average_vec(level_1, average_1);
+		average_vec(level_2, average_2);
+		average_vec(level_3, average_3);
+		level_val_1 = average_1;
+		level_val_2 = average_2;
+		level_val_3 = average_3;
+	}
+	if (level_method == USE_MEDIAN)
+	{
+		median_vec(level_1, median_1);
+		median_vec(level_2, median_2);
+		median_vec(level_3, median_3);
+		level_val_1 = median_1;
+		level_val_2 = median_2;
+		level_val_3 = median_3;
+	}
+
+	level_val_0 = 1000 * level_val_1; // DEFAULT background with infinite distance
+	cv::rectangle(imgDepth64F, face_rect, cv::Scalar(level_val_0), CV_FILLED);
+	cv::fillConvexPoly(imgDepth64F, contour_1, cv::Scalar(level_val_1));
+	cv::fillConvexPoly(imgDepth64F, contour_2, cv::Scalar(level_val_2));
+	cv::fillConvexPoly(imgDepth64F, contour_3, cv::Scalar(level_val_3));
 	imgDepth64F = imgDepth64F(face_rect);
 	saveFile(imgDepth64F);
 }
