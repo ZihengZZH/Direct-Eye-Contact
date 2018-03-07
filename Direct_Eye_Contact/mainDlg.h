@@ -18,7 +18,7 @@ public:
 	cv::Mat cap_mat_L, cap_mat_R;
 	cv::Mat mat_depth_standby, mat_synth_standby;
 	FaceDepth face;
-	BOOL if_landmarks, if_depth, if_synth;
+	BOOL if_landmarks, if_info, if_depth, if_synth;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
@@ -31,7 +31,9 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedDepth();
 	afx_msg void OnBnClickedFacial();
+	afx_msg void OnBnClickedInfo();
 	afx_msg void OnBnClickedClose();
 	afx_msg void OnBnClickedSynth();
+	
 };
 

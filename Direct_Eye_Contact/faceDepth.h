@@ -60,7 +60,7 @@ public:
 	cv::Mat drawLines(void); // visualise the corresponding results
 
 	void levelDepth(cv::Mat& img);
-	void levelDepthVis(cv::Mat& img);
+	void levelDepthVis(cv::Mat& img, bool if_info);
 
 	void saveFile(cv::Mat img_mat);
 	void calDepth(void);

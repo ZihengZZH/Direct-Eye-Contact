@@ -167,7 +167,7 @@ bool FaceDepth::facialLandmark(bool left)
 			int border_v = shapes[0].part(38).y() - shapes[0].part(19).y();
 			cv::Rect face = dlib2opencv(faces[0]);
 			face.x -= border_h;
-			face.y -= border_v;
+			face.y -= border_v * 2;
 			face.width += border_h * 2;
 			face.height += border_v * 2;
 
@@ -212,10 +212,10 @@ cv::Mat FaceDepth::facialLandmarkVis(bool left)
 		int border_v = shapes[0].part(38).y() - shapes[0].part(19).y();
 
 		cv::Rect face = dlib2opencv(faces[0]);
-		face.x -= border_h;
-		face.y -= border_v;
-		face.width += border_h * 2;
-		face.height += border_v * 2;
+		face.x -= border_h / 2;
+		face.y -= border_v * 2;
+		face.width += border_h;
+		face.height += border_v * 3;
 		cv::rectangle(frame_facial, face, cv::Scalar(0, 255, 0), 0.7);
 
 		for (int i = 0; i < 68; i++)
@@ -288,7 +288,6 @@ void FaceDepth::levelDepth(cv::Mat & img)
 	double average_1, average_2, average_3;
 	double median_1, median_2, median_3;
 	double level_val_0, level_val_1, level_val_2, level_val_3;
-	double backgound;
 	cv::Mat imgDepth64F = cv::Mat(img.rows, img.cols, CV_64F);
 
 	for (int k = 0; k < 68; k++)
@@ -352,70 +351,91 @@ void FaceDepth::levelDepth(cv::Mat & img)
 	cv::fillConvexPoly(imgDepth64F, contour_2, cv::Scalar(level_val_2));
 	cv::fillConvexPoly(imgDepth64F, contour_3, cv::Scalar(level_val_3));
 	imgDepth64F = imgDepth64F(face_rect);
-	saveFile(imgDepth64F);
+	//saveFile(imgDepth64F);
 }
 
 
-void FaceDepth::levelDepthVis(cv::Mat& img)
+void FaceDepth::levelDepthVis(cv::Mat& img, bool if_info)
 {
-	std::vector<std::pair<int, double>> level_1, level_2, level_3; // 3 closest
-	// the coordinates may be easier to be accessed in vector
-	// Point2i (integer) vital to draw the convex polygon
-	std::vector<cv::Point2i> points_L, points_R, convexHull;
-	std::vector<cv::Point2i> points_1, points_2, points_3;
-	std::vector<cv::Point2i> contour_1, contour_2, contour_3;
-	bool show_points = false;
-
-	for (int k = 0; k < 68; k++)
+	if (if_info)
 	{
-		points_L.push_back(cv::Point2i(shapes_L.part(k).x(), shapes_L.part(k).y()));
-		points_R.push_back(cv::Point2i(shapes_R.part(k).x(), shapes_R.part(k).y()));
+		float point_8, point_30, point_57;
+		point_8 = baseline * focal / (shapes_L.part(8).x() - shapes_R.part(8).x());
+		point_30 = baseline * focal / (shapes_L.part(30).x() - shapes_R.part(30).x());
+		point_57 = baseline * focal / (shapes_L.part(57).x() - shapes_R.part(57).x());
+		circle(img, cvPoint(shapes_L.part(8).x(), shapes_L.part(8).y()), 3, cv::Scalar(0, 255, 0), -1);
+		circle(img, cvPoint(shapes_L.part(30).x(), shapes_L.part(30).y()), 3, cv::Scalar(0, 255, 0), -1);
+		circle(img, cvPoint(shapes_L.part(57).x(), shapes_L.part(57).y()), 3, cv::Scalar(0, 255, 0), -1);
+
+		putText(img, std::to_string(point_8), cvPoint(shapes_L.part(8).x(),
+			shapes_L.part(8).y()), 1, 1, cv::Scalar(255, 0, 0), 1, 4);
+		putText(img, std::to_string(point_30), cvPoint(shapes_L.part(30).x(),
+			shapes_L.part(30).y()), 1, 1, cv::Scalar(255, 0, 0), 1, 4);
+		putText(img, std::to_string(point_57), cvPoint(shapes_L.part(57).x(),
+			shapes_L.part(57).y()), 1, 1, cv::Scalar(255, 0, 0), 1, 4);
 	}
-
-	std::sort(depth_data_index.begin(), depth_data_index.end(), CmpByValue());
-
-	int number = depth_data_index.size() / 3;
-
-	for (int i = 0; i < depth_data_index.size(); i++)
+	else
 	{
-		if (i > number * 2)
-			level_3.push_back(depth_data_index[i]);
-		else if (i > number * 1)
-			level_2.push_back(depth_data_index[i]);
-		else
-			level_1.push_back(depth_data_index[i]);
-	}
+		std::vector<std::pair<int, double>> level_1, level_2, level_3; // 3 closest
+		// the coordinates may be easier to be accessed in vector
+		// Point2i (integer) vital to draw the convex polygon
+		std::vector<cv::Point2i> points_L, points_R, convexHull;
+		std::vector<cv::Point2i> points_1, points_2, points_3;
+		std::vector<cv::Point2i> contour_1, contour_2, contour_3;
+		bool show_points = false;
 
-	// Scalar BGR (Blue Green Red)
-	for (auto one : level_1)
-	{
-		if (show_points)
-			cv::circle(img, points_L[one.first], 2, cv::Scalar(255, 0, 0)); // BLUE
-		points_1.push_back(points_L[one.first]);
-	}
-	for (auto two : level_2)
-	{
-		if (show_points)
-			cv::circle(img, points_L[two.first], 2, cv::Scalar(0, 255, 0)); // GREEN
-		points_2.push_back(points_L[two.first]);
-	}
-	for (auto three : level_3)
-	{
-		if (show_points)
-			cv::circle(img, points_L[three.first], 2, cv::Scalar(0, 0, 255)); // RED
-		points_3.push_back(points_L[three.first]);
-	}
+		for (int k = 0; k < 68; k++)
+		{
+			points_L.push_back(cv::Point2i(shapes_L.part(k).x(), shapes_L.part(k).y()));
+			points_R.push_back(cv::Point2i(shapes_R.part(k).x(), shapes_R.part(k).y()));
+		}
 
-	cv::convexHull(cv::Mat(points_1), convexHull, false);
-	cv::approxPolyDP(cv::Mat(convexHull), contour_1, 0.001, true);
-	cv::convexHull(cv::Mat(points_2), convexHull, false);
-	cv::approxPolyDP(cv::Mat(convexHull), contour_2, 0.001, true);
-	cv::convexHull(cv::Mat(points_3), convexHull, false);
-	cv::approxPolyDP(cv::Mat(convexHull), contour_3, 0.001, true);
+		std::sort(depth_data_index.begin(), depth_data_index.end(), CmpByValue());
 
-	cv::fillConvexPoly(img, contour_1, cv::Scalar(100, 100, 100));
-	cv::fillConvexPoly(img, contour_2, cv::Scalar(150, 150, 150));
-	cv::fillConvexPoly(img, contour_3, cv::Scalar(200, 200, 200));
+		int number = depth_data_index.size() / 3;
+
+		for (int i = 0; i < depth_data_index.size(); i++)
+		{
+			if (i > number * 2)
+				level_3.push_back(depth_data_index[i]);
+			else if (i > number * 1)
+				level_2.push_back(depth_data_index[i]);
+			else
+				level_1.push_back(depth_data_index[i]);
+		}
+
+		// Scalar BGR (Blue Green Red)
+		for (auto one : level_1)
+		{
+			if (show_points)
+				cv::circle(img, points_L[one.first], 2, cv::Scalar(255, 0, 0)); // BLUE
+			points_1.push_back(points_L[one.first]);
+		}
+		for (auto two : level_2)
+		{
+			if (show_points)
+				cv::circle(img, points_L[two.first], 2, cv::Scalar(0, 255, 0)); // GREEN
+			points_2.push_back(points_L[two.first]);
+		}
+		for (auto three : level_3)
+		{
+			if (show_points)
+				cv::circle(img, points_L[three.first], 2, cv::Scalar(0, 0, 255)); // RED
+			points_3.push_back(points_L[three.first]);
+		}
+
+		cv::convexHull(cv::Mat(points_1), convexHull, false);
+		cv::approxPolyDP(cv::Mat(convexHull), contour_1, 0.001, true);
+		cv::convexHull(cv::Mat(points_2), convexHull, false);
+		cv::approxPolyDP(cv::Mat(convexHull), contour_2, 0.001, true);
+		cv::convexHull(cv::Mat(points_3), convexHull, false);
+		cv::approxPolyDP(cv::Mat(convexHull), contour_3, 0.001, true);
+
+		cv::fillConvexPoly(img, contour_1, cv::Scalar(100, 100, 100));
+		cv::fillConvexPoly(img, contour_2, cv::Scalar(150, 150, 150));
+		cv::fillConvexPoly(img, contour_3, cv::Scalar(200, 200, 200));
+	}
+	
 
 	// NO NEED TO DEALLOCATE THE VECTORS
 }

@@ -13,6 +13,7 @@
 #define ID_SYNTH                        1008
 #define ID_FACIAL                       1009
 #define ID_CLOSE                        1010
+#define ID_INFO                         1011
 
 // Next default values for new objects
 // 

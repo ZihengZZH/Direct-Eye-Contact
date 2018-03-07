@@ -58,6 +58,7 @@ BEGIN_MESSAGE_MAP(CmainDlg, CDialogEx)
 	ON_BN_CLICKED(ID_OPEN, &CmainDlg::OnBnClickedOpen)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(ID_FACIAL, &CmainDlg::OnBnClickedFacial)
+	ON_BN_CLICKED(ID_INFO, &CmainDlg::OnBnClickedInfo)
 	ON_BN_CLICKED(ID_DEPTH, &CmainDlg::OnBnClickedDepth)
 	ON_BN_CLICKED(ID_SYNTH, &CmainDlg::OnBnClickedSynth)
 	ON_BN_CLICKED(ID_CLOSE, &CmainDlg::OnBnClickedClose)
@@ -110,6 +111,14 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 		cap_mat_R = face.facialLandmarkVis(false);
 	}
 
+	if (if_info)
+	{
+		if (face.facialLandmark(true) && face.facialLandmark(false))
+		{
+			face.levelDepthVis(cap_mat_L, true);
+		}
+	}
+
 	if (if_depth)
 	{
 		if (face.facialLandmark(true) && face.facialLandmark(false))
@@ -117,7 +126,7 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 			cv::Mat depth_mat;
 			cap_mat_L.copyTo(depth_mat);
 			face.calDepth();
-			face.levelDepthVis(depth_mat);
+			face.levelDepthVis(depth_mat, false);
 			cv::imshow("depth map", depth_mat);
 		}
 	}
@@ -154,6 +163,12 @@ void CmainDlg::OnBnClickedFacial()
 }
 
 
+void CmainDlg::OnBnClickedInfo()
+{
+	if_info = TRUE;
+}
+
+
 void CmainDlg::OnBnClickedDepth()
 {
 	if_depth = TRUE;
@@ -169,7 +184,11 @@ void CmainDlg::OnBnClickedSynth()
 void CmainDlg::OnBnClickedClose()
 {	
 	if_landmarks = FALSE;
+	if_info = FALSE;
 	if_depth = FALSE;
 	if_synth = FALSE;
 }
+
+
+
 
