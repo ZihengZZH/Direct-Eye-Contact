@@ -41,8 +41,8 @@ BOOL CmainDlg::OnInitDialog()
 		AfxMessageBox(_T("UNABLE TO OPEN CAMERAS"));
 		return FALSE;
 	}
-	mat_depth_standby = cv::imread("./test_image/standby_depth.png");
-	mat_synth_standby = cv::imread("./test_image/standby_synth.png");
+	mat_depth_standby = cv::imread("..\\Direct_Eye_Contact\\image\\standby_depth.png");
+	mat_synth_standby = cv::imread("..\\Direct_Eye_Contact\\image\\standby_synth.png");
 
 	face.readParameter();
 
@@ -69,7 +69,7 @@ void CmainDlg::OnBnClickedOpen()
 	
 	/*if (false)
 	{
-		std::string pic_path = "./test_image/test.jpg";
+		std::string pic_path = "./test/test.jpg";
 		cv::Mat image = cv::imread(pic_path);
 		cv::Mat imagedst; // change the size to fit
 	}
