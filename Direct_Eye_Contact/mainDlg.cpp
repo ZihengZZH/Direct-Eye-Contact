@@ -6,6 +6,7 @@ CmainDlg::CmainDlg() : CDialogEx(CmainDlg::IDD)
 {
 }
 
+
 BOOL CmainDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
@@ -34,25 +35,28 @@ BOOL CmainDlg::OnInitDialog()
 	::SetParent(hWnd_S, GetDlgItem(IDC_SYNTH)->m_hWnd);
 	::ShowWindow(hParent, SW_HIDE);
 
-	cap_L = cv::VideoCapture(0);
-	cap_R = cv::VideoCapture(1);
-	if (!cap_L.isOpened() || !cap_R.isOpened())
-	{
-		AfxMessageBox(_T("UNABLE TO OPEN CAMERAS"));
-		return FALSE;
-	}
+	pBoxOne = (CEdit*)GetDlgItem(IDC_CONSOLE);
+
+	logo.Load(_T("..\\Direct_Eye_Contact\\image\\logo.jpg"));
+	m_Logo.SetBitmap(HBITMAP(logo));
+	//int dimx = 300, dimy = 100;
+
 	mat_depth_standby = cv::imread("..\\Direct_Eye_Contact\\image\\standby_depth.png");
 	mat_synth_standby = cv::imread("..\\Direct_Eye_Contact\\image\\standby_synth.png");
 
+	calib.readStringList();
 	face.readParameter();
 
 	return TRUE;
 }
 
+
 void CmainDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LOGO, m_Logo);
 }
+
 
 BEGIN_MESSAGE_MAP(CmainDlg, CDialogEx)
 	ON_BN_CLICKED(ID_OPEN, &CmainDlg::OnBnClickedOpen)
@@ -62,7 +66,10 @@ BEGIN_MESSAGE_MAP(CmainDlg, CDialogEx)
 	ON_BN_CLICKED(ID_DEPTH, &CmainDlg::OnBnClickedDepth)
 	ON_BN_CLICKED(ID_SYNTH, &CmainDlg::OnBnClickedSynth)
 	ON_BN_CLICKED(ID_CLOSE, &CmainDlg::OnBnClickedClose)
+	ON_BN_CLICKED(ID_RECORD, &CmainDlg::OnBnClickedRecord)
+	ON_BN_CLICKED(ID_CALIB, &CmainDlg::OnBnClickedCalib)
 END_MESSAGE_MAP()
+
 
 void CmainDlg::OnBnClickedOpen()
 {
@@ -89,6 +96,14 @@ void CmainDlg::OnBnClickedOpen()
 		str.ReleaseBuffer();
 	}*/
 
+	cap_L = cv::VideoCapture(0);
+	cap_R = cv::VideoCapture(1);
+	if (!cap_L.isOpened() || !cap_R.isOpened())
+	{
+		AfxMessageBox(_T("UNABLE TO OPEN CAMERAS"));
+		return;
+	}
+
 	SetTimer(1, 10, NULL);
 }
 
@@ -98,6 +113,25 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 	
 	cap_L >> cap_mat_L;
 	cap_R >> cap_mat_R;
+
+	if (if_record)
+	{
+		cap_mat_L.copyTo(calib.camera_matL);
+		cap_mat_R.copyTo(calib.camera_matR);
+		calib.saveImage();
+
+		str.Format(_T("Images saved to files NO _%u_"), calib.time);
+		pBoxOne->SetWindowText(str);
+		str.ReleaseBuffer();
+	}
+
+	if (if_calib)
+	{
+		calib.stereoCalib();
+		str.Format(_T("Stereo Calibration completed"));
+		pBoxOne->SetWindowText(str);
+		str.ReleaseBuffer();
+	}
 
 	cv::undistort(cap_mat_L, face.imgLeft_col, face.M1, face.D1);
 	cv::undistort(cap_mat_R, face.imgRight_col, face.M2, face.D2);
@@ -157,6 +191,25 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 }
 
 
+void CmainDlg::OnBnClickedRecord()
+{
+	if_record = TRUE;
+	if (calib.time == calib.times)
+	{
+		if_record = FALSE;
+		str.Format(_T("Images have been stored. Please begin stereo calibration"));
+		pBoxOne->SetWindowText(str);
+		str.ReleaseBuffer();
+	}
+}
+
+
+void CmainDlg::OnBnClickedCalib()
+{
+	if_calib = TRUE;
+}
+
+
 void CmainDlg::OnBnClickedFacial()
 {
 	if_landmarks = TRUE;
@@ -183,12 +236,10 @@ void CmainDlg::OnBnClickedSynth()
 
 void CmainDlg::OnBnClickedClose()
 {	
+	if_record = FALSE;
+	if_calib = FALSE;
 	if_landmarks = FALSE;
 	if_info = FALSE;
 	if_depth = FALSE;
 	if_synth = FALSE;
 }
-
-
-
-

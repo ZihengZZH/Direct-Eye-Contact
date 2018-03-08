@@ -9,17 +9,15 @@
 class Calibrate
 {
 
-private:
-	// Whether attributes of web-cams stored in class remains determination
-	cv::VideoCapture cameraL;
-	cv::VideoCapture cameraR;
+public:
 	cv::Mat camera_matL;
 	cv::Mat camera_matR;
-	std::vector<std::string> imageList;
-
 	// 20 pairs of stereo images are recorded
 	const int times = 20;
 	int time = 0;
+
+private:
+	std::vector<std::string> imageList;
 	std::string img_list = "calib_xml/imageList.xml";
 	std::string cam_intri = "calib_xml/intrinsics.yml";
 	std::string cam_extri = "calib_xml/extrinsics.yml";
@@ -28,10 +26,9 @@ private:
 
 private:
 	float squareSize = 0.025f; // The square size is 2.5cm
-	bool displayCorners = true;
-	bool useCalibrated = true;
-	bool showRectified = true;
-	bool saveTestImg = true;
+	bool displayCorners = false;
+	bool useCalibrated = false;
+	bool showRectified = false;
 	cv::Size boardSize = cv::Size(6, 9); // The chessboard is 7*10
 	const int maxScale = 2;
 
@@ -75,10 +72,8 @@ public:
 	~Calibrate() {};
 
 	void displayHelp(void);
-	bool openCamera(void);
-	bool readStringList(const std::string& filename, std::vector<std::string>& l);
-	void saveTestImage(void);
-	void saveImage(int id);
+	bool readStringList(void);
+	void saveImage(void);
 	std::vector<cv::Point3f> Create3DChessboardCorners(cv::Size boardSize, float squareSize);
 	void stereoCalib(void);
 	void readParameter(void);

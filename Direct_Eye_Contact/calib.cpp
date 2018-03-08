@@ -17,23 +17,10 @@ void Calibrate::displayHelp(void)
 }
 
 
-bool Calibrate::openCamera(void)
+bool Calibrate::readStringList(void)
 {
-	cameraL.open(0);
-	cameraR.open(1);
-	if (!cameraL.isOpened() || !cameraR.isOpened())
-	{
-		std::cerr << "FAILED TO OPEN CAMERAS\n";
-		return false;
-	}
-	return true;
-}
-
-
-bool Calibrate::readStringList(const std::string& filename, std::vector<std::string>& l)
-{
-	l.clear();
-	cv::FileStorage fs(filename, cv::FileStorage::READ);
+	imageList.clear();
+	cv::FileStorage fs(img_list, cv::FileStorage::READ);
 	if (!fs.isOpened())
 	{
 		return false;
@@ -46,46 +33,18 @@ bool Calibrate::readStringList(const std::string& filename, std::vector<std::str
 	cv::FileNodeIterator it = n.begin(), it_end = n.end();
 	for (; it != it_end; ++it)
 	{
-		l.push_back((std::string)*it);
+		imageList.push_back((std::string)*it);
 	}
 	return true;
 }
 
 
-void Calibrate::saveTestImage(void)
+void Calibrate::saveImage(void)
 {
-
-	if (openCamera())
-	{
-		while (true)
-		{
-			cameraL >> camera_matL;
-			cameraR >> camera_matR;
-			imshow("camera L", camera_matL);
-			imshow("camera R", camera_matR);
-			char key = (char)cv::waitKey(30);
-			if (key == ' ')
-			{
-				saveImage(time);
-				time++;
-			}
-			if (key == 27 || time == times)
-			{
-				break;
-			}
-		}
-	}
-	else {
-		std::cerr << "FAILED TO OPEN CAMERAS" << std::endl;
-	}
-}
-
-
-void Calibrate::saveImage(int id)
-{
-	imwrite(imageList[id * 2 + 0], camera_matL);
-	imwrite(imageList[id * 2 + 1], camera_matR);
-	std::cout << "SAVE IMAGES TO FILES NO _" << id << "_" << std::endl;
+	imwrite(imageList[time * 2 + 0], camera_matL);
+	imwrite(imageList[time * 2 + 1], camera_matR);
+	//std::cout << "SAVE IMAGES TO FILES NO _" << id << "_" << std::endl;
+	time++;
 }
 
 
@@ -106,17 +65,11 @@ std::vector<cv::Point3f> Calibrate::Create3DChessboardCorners(cv::Size boardSize
 
 void Calibrate::stereoCalib(void)
 {
-	displayHelp();
-	readStringList(img_list, imageList);
-	if (saveTestImg)
-	{
-		saveTestImage();
-		std::cout << "SUCCESSFULLY WRITTEN IMAGES TO FILES\n";
-	}
-	if (imageList.size() % 2 != 0)
+	
+	/*if (imageList.size() % 2 != 0)
 	{
 		std::cerr << "Error: the image list contains odd (non-even) number of elements\n";
-	}
+	}*/
 
 	std::vector<std::vector<cv::Point2f>> imagePoints[2];
 	std::vector<std::vector<cv::Point3f>> objectPoints;
