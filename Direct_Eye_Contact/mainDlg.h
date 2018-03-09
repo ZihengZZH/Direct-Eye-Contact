@@ -18,6 +18,7 @@ public:
 	cv::VideoCapture cap_L; // left camera 
 	cv::VideoCapture cap_R; // right camera
 	cv::Mat cap_mat_L, cap_mat_R;
+	cv::Mat cap_mat_L_calib, cap_mat_R_calib;
 	cv::Mat mat_depth_standby, mat_synth_standby;
 	CImage logo;
 	Calibrate calib;
@@ -26,6 +27,13 @@ public:
 	BOOL already_calib;
 	CEdit* pBoxOne;
 	CString str;
+
+	enum
+	{
+		USE_LEVEL = 0,
+		USE_VORONOI
+	};
+	int depth_method = 1;
 
 
 protected:

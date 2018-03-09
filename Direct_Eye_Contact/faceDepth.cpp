@@ -24,6 +24,18 @@ static void median_vec(std::vector<std::pair<int, double>>&temp, double& median)
 }
 
 
+static void retrieve_depth(cv::Point& point, std::vector<cv::Point3f>& points_depth, double& depth)
+{
+	for (auto point_depth : points_depth)
+	{
+		if (point == cv::Point(point_depth.x, point_depth.y))
+		{
+			depth = point_depth.z;
+		}
+	}
+}
+
+
 FaceDepth::FaceDepth()
 {
 	dlib::deserialize("database/shape_predictor_68_face_landmarks.dat") >> pose_model;
@@ -442,6 +454,97 @@ void FaceDepth::levelDepthVis(cv::Mat& img, bool if_info)
 }
 
 
+void FaceDepth::voronoi(cv::Subdiv2D& subdiv)
+{
+	cv::Rect rect(0, 0, imgLeft_col.size().width, imgLeft_col.size().height);
+	subdiv = cv::Subdiv2D(rect);
+
+	for (int i = 0; i < points_depth.size(); ++i)
+	{
+		cv::Point2i point = cv::Point2i(points_depth[i].x, points_depth[i].y);
+		subdiv.insert(point);
+	}
+
+}
+
+
+void FaceDepth::voronoiDepth(cv::Mat & img)
+{
+	cv::Subdiv2D subdiv;
+	voronoi(subdiv);
+	cv::Mat imgDepth16S = cv::Mat(img.rows, img.cols, CV_64FC1);
+
+	std::vector<cv::Vec6f> triangleList;
+	subdiv.getTriangleList(triangleList);
+	std::vector<cv::Point> pt(3);
+	cv::Size size = img.size();
+	cv::Rect rect(0, 0, size.width, size.height);
+	int sz = triangleList.size();
+	double depth_val, depth_0, depth_1, depth_2;
+
+	for (size_t i = 0; i < triangleList.size(); i++)
+	{
+		cv::Vec6f t = triangleList[i];
+
+		pt[0] = cv::Point(cvRound(t[0]), cvRound(t[1]));
+		pt[1] = cv::Point(cvRound(t[2]), cvRound(t[3]));
+		pt[2] = cv::Point(cvRound(t[4]), cvRound(t[5]));
+
+		// Draw rectangles completely inside the image.
+		if (rect.contains(pt[0]) && rect.contains(pt[1]) && rect.contains(pt[2]))
+		{
+			retrieve_depth(pt[0], points_depth, depth_0);
+			retrieve_depth(pt[1], points_depth, depth_1);
+			retrieve_depth(pt[2], points_depth, depth_2);
+
+			depth_val = (depth_0 + depth_1 + depth_2) / 3;
+
+			cv::fillConvexPoly(imgDepth16S, pt, cv::Scalar(depth_val));
+		}
+	}
+
+	imgDepth16S = imgDepth16S(face_rect);
+}
+
+
+void FaceDepth::voronoiDepthVis(cv::Mat & img)
+{
+	cv::Subdiv2D subdiv;
+	voronoi(subdiv);
+
+	std::vector<cv::Vec6f> triangleList;
+	subdiv.getTriangleList(triangleList);
+	std::vector<cv::Point> pt(3);
+	cv::Size size = img.size();
+	cv::Rect rect(0, 0, size.width, size.height);
+	int sz = triangleList.size();
+	double depth_val, depth_0, depth_1, depth_2;
+	int depth_vis;
+
+	for (size_t i = 0; i < triangleList.size(); i++)
+	{
+		cv::Vec6f t = triangleList[i];
+
+		pt[0] = cv::Point(cvRound(t[0]), cvRound(t[1]));
+		pt[1] = cv::Point(cvRound(t[2]), cvRound(t[3]));
+		pt[2] = cv::Point(cvRound(t[4]), cvRound(t[5]));
+
+		// Draw rectangles completely inside the image.
+		if (rect.contains(pt[0]) && rect.contains(pt[1]) && rect.contains(pt[2]))
+		{
+			retrieve_depth(pt[0], points_depth, depth_0);
+			retrieve_depth(pt[1], points_depth, depth_1);
+			retrieve_depth(pt[2], points_depth, depth_2);
+
+			depth_val = (depth_0 + depth_1 + depth_2) / 3;
+			depth_vis = 250 - (depth_val - min_depth) * (200 / (max_depth - min_depth));
+			cv::fillConvexPoly(img, pt, cv::Scalar(depth_vis, depth_vis, depth_vis));
+		}
+	}
+
+}
+
+
 void FaceDepth::saveFile(cv::Mat img_mat)
 {
 	cv::FileStorage file;
@@ -457,22 +560,29 @@ void FaceDepth::saveFile(cv::Mat img_mat)
 
 void FaceDepth::calDepth(void)
 {
-	// READ PARAMETERS FIRST
-	//readParameter();
-	//std::cout << "focal length " << focal << std::endl;
-	//std::cout << "baseline " << baseline << std::endl;
-
-	for (int i = 0; i < 68; i++)
+	max_depth = 0, min_depth = 1000;
+	for (int i = 0; i < 68; ++i)
 	{
 		dispar = double(shapes_L.part(i).x() - shapes_R.part(i).x());
 		depth = baseline * focal / dispar; // depth computation
 
-		/*std::cout << "No" << i << " x " << shapes_L.part(i).x() << " " << shapes_R.part(i).x()
-			<< "\ty " << shapes_L.part(i).y() << " " << shapes_R.part(i).y() << "\t disp " << dispar
-			<< "\t depth " << depth << std::endl;*/
-			//depth_data.push_back(depth);
+		if (depth > max_depth)
+			max_depth = depth;
+		if (depth < min_depth)
+			min_depth = depth;
+
 		depth_data_index[i] = std::make_pair(i, depth);
+		points_depth[i] = cv::Point3f(shapes_L.part(i).x(), shapes_L.part(i).y(), depth);
 	}
+
+	points_depth[68] = cv::Point3f(face_rect.x, face_rect.y, 2 * max_depth - min_depth);
+	points_depth[69] = cv::Point3f(face_rect.x + face_rect.height / 2, face_rect.y, 2 * max_depth - min_depth);
+	points_depth[70] = cv::Point3f(face_rect.x + face_rect.height, face_rect.y, 2 * max_depth - min_depth);
+	points_depth[71] = cv::Point3f(face_rect.x + face_rect.height, face_rect.y + face_rect.width / 2, 2 * max_depth - min_depth);
+	points_depth[72] = cv::Point3f(face_rect.x + face_rect.height, face_rect.y + face_rect.width, 2 * max_depth - min_depth);
+	points_depth[73] = cv::Point3f(face_rect.x + face_rect.height / 2, face_rect.y + face_rect.width, 2 * max_depth - min_depth);
+	points_depth[74] = cv::Point3f(face_rect.x, face_rect.y + face_rect.width, 2 * max_depth - min_depth);
+	points_depth[75] = cv::Point3f(face_rect.x, face_rect.y + face_rect.width / 2, 2 * max_depth - min_depth);
 
 	//drawLines();
 }

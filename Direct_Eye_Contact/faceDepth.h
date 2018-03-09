@@ -13,6 +13,7 @@ public:
 	// calibration parameters
 	cv::Mat M1, M2, D1, D2, R, T, R1, R2, P1, P2, Q;
 	double focal, baseline, dispar, depth;
+	double max_depth, min_depth;
 
 	cv::Mat imgLeft_col, imgRight_col; // undistort frame from web-cam
 	dlib::full_object_detection shapes_L, shapes_R;
@@ -22,6 +23,8 @@ public:
 	std::vector<double> depth_data; // depth data of landmarks
 	std::vector<double> original_pos, virtual_pos;
 	std::vector<std::pair<int, double>> depth_data_index = std::vector<std::pair<int, double>>(68);
+
+	std::vector<cv::Point3f> points_depth = std::vector<cv::Point3f>(76);
 
 	enum
 	{
@@ -61,6 +64,10 @@ public:
 
 	void levelDepth(cv::Mat& img);
 	void levelDepthVis(cv::Mat& img, bool if_info);
+
+	void voronoi(cv::Subdiv2D& subdiv);
+	void voronoiDepth(cv::Mat& img);
+	void voronoiDepthVis(cv::Mat& img);
 
 	void saveFile(cv::Mat img_mat);
 	void calDepth(void);

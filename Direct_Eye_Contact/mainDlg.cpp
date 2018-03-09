@@ -154,20 +154,22 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 
 	if (already_calib)
 	{
-		cv::undistort(cap_mat_L, face.imgLeft_col, face.M1, face.D1);
-		cv::undistort(cap_mat_R, face.imgRight_col, face.M2, face.D2);
+		cv::undistort(cap_mat_L, cap_mat_L_calib, face.M1, face.D1);
+		cv::undistort(cap_mat_R, cap_mat_R_calib, face.M2, face.D2);
+		cap_mat_L_calib.copyTo(face.imgLeft_col);
+		cap_mat_R_calib.copyTo(face.imgRight_col);
 
 		if (if_landmarks)
 		{
-			cap_mat_L = face.facialLandmarkVis(true);
-			cap_mat_R = face.facialLandmarkVis(false);
+			cap_mat_L_calib = face.facialLandmarkVis(true);
+			cap_mat_R_calib = face.facialLandmarkVis(false);
 		}
 
 		if (if_info)
 		{
 			if (face.facialLandmark(true) && face.facialLandmark(false))
 			{
-				face.levelDepthVis(cap_mat_L, true);
+				face.levelDepthVis(cap_mat_L_calib, true);
 			}
 		}
 
@@ -176,9 +178,12 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 			if (face.facialLandmark(true) && face.facialLandmark(false))
 			{
 				cv::Mat depth_mat;
-				cap_mat_L.copyTo(depth_mat);
+				cap_mat_L_calib.copyTo(depth_mat);
 				face.calDepth();
-				face.levelDepthVis(depth_mat, false);
+				if (depth_method == USE_LEVEL)
+					face.levelDepthVis(depth_mat, false);
+				if (depth_method == USE_VORONOI)
+					face.voronoiDepthVis(depth_mat);
 				cv::imshow("depth map", depth_mat);
 			}
 		}
@@ -201,18 +206,19 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 			cv::resize(mat_synth_standby, mat_synth_standby, cv::Size(rect.Width(), rect.Height()));
 			cv::imshow("synthesis", mat_synth_standby);
 		}
+		
+		cv::imshow("left view", cap_mat_L_calib);
+		cv::imshow("right view", cap_mat_R_calib);
 	}
 	else
 	{
 		str.Format(_T("PLEASE RUN CALIBRATION FIRST"));
 		pBoxOne->SetWindowText(str);
 		str.ReleaseBuffer();
-	}
-	
-	
 
-	cv::imshow("left view", cap_mat_L);
-	cv::imshow("right view", cap_mat_R);
+		cv::imshow("left view", cap_mat_L);
+		cv::imshow("right view", cap_mat_R);
+	}
 
 	CDialogEx::OnTimer(nIDEvent);
 }
@@ -240,23 +246,30 @@ void CmainDlg::OnBnClickedCalib()
 void CmainDlg::OnBnClickedFacial()
 {
 	if_landmarks = TRUE;
+	if_info = FALSE;
 }
 
 
 void CmainDlg::OnBnClickedInfo()
 {
+	if_landmarks = FALSE;
 	if_info = TRUE;
 }
 
 
 void CmainDlg::OnBnClickedDepth()
 {
+	if_landmarks = FALSE;
+	if_info = FALSE;
 	if_depth = TRUE;
 }
 
 
 void CmainDlg::OnBnClickedSynth()
 {
+	if_landmarks = FALSE;
+	if_info = FALSE;
+	if_depth = FALSE;
 	if_synth = TRUE;
 }
 
