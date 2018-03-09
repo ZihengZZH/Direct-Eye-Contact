@@ -52,7 +52,7 @@ public:
 
 public:
 	cv::Rect dlib2opencv(dlib::rectangle r); // key transformation
-	void readParameter(void);
+	bool readParameter(void);
 	void disparityMap(int ndisparities, int SADWindowSize);
 
 	bool facialLandmark(bool left); // store the shape of landmarks

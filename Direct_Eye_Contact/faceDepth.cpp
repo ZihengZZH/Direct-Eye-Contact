@@ -40,7 +40,7 @@ cv::Rect FaceDepth::dlib2opencv(dlib::rectangle r)
 }
 
 
-void FaceDepth::readParameter(void)
+bool FaceDepth::readParameter(void)
 {
 	cv::FileStorage fs;
 	fs.open("calib_xml/intrinsics.yml", cv::FileStorage::READ);
@@ -53,7 +53,7 @@ void FaceDepth::readParameter(void)
 		fs.release();
 	}
 	else
-		std::cerr << "ERROR READING PARA\n";
+		return false;
 
 	/*
 		camera matrix M1 M2
@@ -79,7 +79,7 @@ void FaceDepth::readParameter(void)
 		fs.release();
 	}
 	else
-		std::cerr << "ERROR READING PARA\n";
+		return false;
 
 	Q.convertTo(Q, CV_64F);
 	R.convertTo(R, CV_64F);
@@ -90,7 +90,8 @@ void FaceDepth::readParameter(void)
 	focal = (M1.ptr<double>(0)[0] + M1.ptr<double>(1)[1]
 		+ M2.ptr<double>(0)[0] + M2.ptr<double>(1)[1]) / 4; // in pixel
 	baseline = 1 / Q.ptr<double>(3)[2]; // in meters
-
+	
+	return true;
 }
 
 

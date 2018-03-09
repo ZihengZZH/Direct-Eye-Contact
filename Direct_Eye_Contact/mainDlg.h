@@ -23,6 +23,7 @@ public:
 	Calibrate calib;
 	FaceDepth face;
 	BOOL if_record, if_calib, if_landmarks, if_info, if_depth, if_synth;
+	BOOL already_calib;
 	CEdit* pBoxOne;
 	CString str;
 
