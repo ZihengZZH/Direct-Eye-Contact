@@ -225,9 +225,9 @@ cv::Mat FaceDepth::facialLandmarkVis(bool left)
 		int border_v = shapes[0].part(38).y() - shapes[0].part(19).y();
 
 		cv::Rect face = dlib2opencv(faces[0]);
-		face.x -= border_h / 2;
+		face.x -= border_h;
 		face.y -= border_v * 2;
-		face.width += border_h;
+		face.width += border_h * 2;
 		face.height += border_v * 3;
 		cv::rectangle(frame_facial, face, cv::Scalar(0, 255, 0), 0.7);
 
@@ -504,6 +504,13 @@ void FaceDepth::voronoiDepth(cv::Mat & img)
 	}
 
 	imgDepth16S = imgDepth16S(face_rect);
+
+	if (true)
+	{
+		saveFile(imgDepth16S, face_rect);
+		cv::imwrite("face_L.jpg", imgLeft_col);
+		cv::imwrite("face_R.jpg", imgRight_col);
+	}
 }
 
 
@@ -545,7 +552,7 @@ void FaceDepth::voronoiDepthVis(cv::Mat & img)
 }
 
 
-void FaceDepth::saveFile(cv::Mat img_mat)
+void FaceDepth::saveFile(cv::Mat img_mat, cv::Rect rect)
 {
 	cv::FileStorage file;
 	file.open("depth/depth_info.yml", cv::FileStorage::WRITE);
@@ -554,6 +561,7 @@ void FaceDepth::saveFile(cv::Mat img_mat)
 		return;
 	}
 	file << "depth info" << img_mat;
+	file << "face rect" << rect;
 	file.release();
 }
 

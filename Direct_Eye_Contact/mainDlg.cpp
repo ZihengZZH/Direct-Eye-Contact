@@ -4,12 +4,29 @@
 
 CmainDlg::CmainDlg() : CDialogEx(CmainDlg::IDD)
 {
+	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON);
 }
 
 
 BOOL CmainDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+
+	SetIcon(m_hIcon, TRUE);			// Set big icon
+	SetIcon(m_hIcon, FALSE);		// Set small icon
+
+	m_font.CreatePointFont(150, L"Arial");
+	m_font_small.CreatePointFont(100, L"Arial");
+
+	GetDlgItem(ID_OPEN)->SetFont(&m_font);
+	GetDlgItem(ID_DEPTH)->SetFont(&m_font);
+	GetDlgItem(ID_SYNTH)->SetFont(&m_font);
+	GetDlgItem(ID_CLOSE)->SetFont(&m_font);
+
+	GetDlgItem(ID_FACIAL)->SetFont(&m_font_small);
+	GetDlgItem(ID_INFO)->SetFont(&m_font_small);
+	GetDlgItem(ID_RECORD)->SetFont(&m_font_small);
+	GetDlgItem(ID_CALIB)->SetFont(&m_font_small);
 
 	cv::namedWindow("left view", CV_WINDOW_AUTOSIZE);
 	HWND hWnd_L = (HWND)cvGetWindowHandle("left view");
@@ -37,8 +54,8 @@ BOOL CmainDlg::OnInitDialog()
 
 	pBoxOne = (CEdit*)GetDlgItem(IDC_CONSOLE);
 
-	logo.Load(_T("..\\Direct_Eye_Contact\\image\\logo.jpg"));
-	m_Logo.SetBitmap(HBITMAP(logo));
+	m_logo.Load(_T("..\\Direct_Eye_Contact\\image\\logo.jpg"));
+	m_Logo.SetBitmap(HBITMAP(m_logo));
 	//int dimx = 300, dimy = 100;
 
 	mat_depth_standby = cv::imread("..\\Direct_Eye_Contact\\image\\standby_depth.png");
@@ -56,6 +73,8 @@ void CmainDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LOGO, m_Logo);
+	DDX_Control(pDX, IDC_ICON, m_icon);
+	DDX_Control(pDX, IDC_INFO, m_info);
 }
 
 
@@ -125,24 +144,24 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 		cap_mat_R.copyTo(calib.camera_matR);
 		calib.saveImage();
 
-		str.Format(_T("Images saved to files NO _%u_"), calib.time);
-		pBoxOne->SetWindowText(str);
-		str.ReleaseBuffer();
+		m_str.Format(_T("Images saved to files NO _%u_"), calib.time);
+		pBoxOne->SetWindowText(m_str);
+		m_str.ReleaseBuffer();
 		if_record = FALSE;
 	}
 
 	if (if_calib)
 	{
-		str.Format(_T("Stereo Calibration in progress..."));
-		pBoxOne->SetWindowText(str);
-		str.ReleaseBuffer();
+		m_str.Format(_T("Stereo Calibration in progress..."));
+		pBoxOne->SetWindowText(m_str);
+		m_str.ReleaseBuffer();
 
 		if (true)
 		{
 			calib.stereoCalib();
-			str.Format(_T("Stereo Calibration completed"));
-			pBoxOne->SetWindowText(str);
-			str.ReleaseBuffer();
+			m_str.Format(_T("Stereo Calibration completed"));
+			pBoxOne->SetWindowText(m_str);
+			m_str.ReleaseBuffer();
 		}
 
 		if (face.readParameter())
@@ -212,9 +231,9 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	else
 	{
-		str.Format(_T("PLEASE RUN CALIBRATION FIRST"));
-		pBoxOne->SetWindowText(str);
-		str.ReleaseBuffer();
+		m_str.Format(_T("PLEASE RUN CALIBRATION FIRST"));
+		pBoxOne->SetWindowText(m_str);
+		m_str.ReleaseBuffer();
 
 		cv::imshow("left view", cap_mat_L);
 		cv::imshow("right view", cap_mat_R);
@@ -230,9 +249,9 @@ void CmainDlg::OnBnClickedRecord()
 	if (calib.time == calib.times)
 	{
 		if_record = FALSE;
-		str.Format(_T("Images have been stored. Please begin stereo calibration"));
-		pBoxOne->SetWindowText(str);
-		str.ReleaseBuffer();
+		m_str.Format(_T("Images have been stored. Please begin stereo calibration"));
+		pBoxOne->SetWindowText(m_str);
+		m_str.ReleaseBuffer();
 	}
 }
 

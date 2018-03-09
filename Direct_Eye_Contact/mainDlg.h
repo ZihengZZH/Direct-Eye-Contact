@@ -20,13 +20,16 @@ public:
 	cv::Mat cap_mat_L, cap_mat_R;
 	cv::Mat cap_mat_L_calib, cap_mat_R_calib;
 	cv::Mat mat_depth_standby, mat_synth_standby;
-	CImage logo;
+	
 	Calibrate calib;
 	FaceDepth face;
 	BOOL if_record, if_calib, if_landmarks, if_info, if_depth, if_synth;
 	BOOL already_calib;
 	CEdit* pBoxOne;
-	CString str;
+	CString m_str;
+	CImage m_logo;
+	CFont m_font, m_font_small;
+	HICON m_hIcon;
 
 	enum
 	{
@@ -52,8 +55,10 @@ public:
 	afx_msg void OnBnClickedInfo();
 	afx_msg void OnBnClickedClose();
 	afx_msg void OnBnClickedSynth();
-	
+
 	CStatic m_Logo;
+	CStatic m_icon;
+	CStatic m_info;
 	
 };
 

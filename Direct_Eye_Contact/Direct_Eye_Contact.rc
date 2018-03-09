@@ -65,26 +65,31 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Direct Eye Contact Video Conferencing"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Open Camera",ID_OPEN,936,132,204,40
+    DEFPUSHBUTTON   "Open Camera",ID_OPEN,936,102,204,40
     CONTROL         "",IDC_CAM_L,"Static",SS_BLACKFRAME,20,19,426,294
     CONTROL         "",IDC_CAM_R,"Static",SS_BLACKFRAME,470,19,426,294
-    EDITTEXT        IDC_CONSOLE,936,480,204,24,ES_AUTOHSCROLL
-    CTEXT           "Console",IDC_STATIC,936,456,36,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_CONSOLE,936,522,204,24,ES_AUTOHSCROLL
+    CTEXT           "Console",IDC_STATIC,936,504,36,12,SS_CENTERIMAGE
     GROUPBOX        "Left camera",IDC_STATIC,12,6,440,312
     GROUPBOX        "Right camera",IDC_STATIC,464,6,440,312
     CONTROL         "",IDC_DEPTH,"Static",SS_BLACKFRAME,18,337,426,294
     CONTROL         "",IDC_SYNTH,"Static",SS_BLACKFRAME,468,337,426,294
     GROUPBOX        "Depth map",IDC_STATIC,12,324,440,312
     GROUPBOX        "Synthesised view",IDC_STATIC,462,324,440,312
-    DEFPUSHBUTTON   "Open Depth Map",ID_DEPTH,936,290,204,40
-    DEFPUSHBUTTON   "Open Synthesised View",ID_SYNTH,936,344,204,36
-    DEFPUSHBUTTON   "Show Facial Landmarks",ID_FACIAL,936,239,90,40
-    DEFPUSHBUTTON   "Close funcationality",ID_CLOSE,936,392,204,36
-    DEFPUSHBUTTON   "Show Depth Info",ID_INFO,1050,239,90,40
-    DEFPUSHBUTTON   "Start Calibration",ID_CALIB,1050,188,90,40
-    DEFPUSHBUTTON   "Record Image",ID_RECORD,936,188,90,40
-    CONTROL         "",IDC_LOGO,"Static",SS_BITMAP,936,36,204,60
-    CONTROL         "",IDC_INFO,"Static",SS_BLACKFRAME,936,564,204,54
+    DEFPUSHBUTTON   "Open Depth Map",ID_DEPTH,936,260,204,40
+    DEFPUSHBUTTON   "Open Synthesised View",ID_SYNTH,936,314,204,36
+    DEFPUSHBUTTON   "Show Facial Ldmks",ID_FACIAL,936,209,90,40
+    DEFPUSHBUTTON   "Close Funcationality",ID_CLOSE,936,362,204,36
+    DEFPUSHBUTTON   "Show Depth Info",ID_INFO,1050,209,90,40
+    DEFPUSHBUTTON   "Start Calibration",ID_CALIB,1050,158,90,40
+    DEFPUSHBUTTON   "Record Image",ID_RECORD,936,158,90,40
+    CONTROL         "",IDC_LOGO,"Static",SS_BITMAP,936,24,15,13
+    CONTROL         IDB_INFO,IDC_INFO,"Static",SS_BITMAP,960,565,48,44
+    GROUPBOX        "",IDC_STATIC_INFO,936,552,204,66
+    LTEXT           "Video Conferencing System",IDC_STATIC_1,1020,564,108,12,SS_CENTERIMAGE
+    LTEXT           "Version 2.0",IDC_STATIC_2,1020,576,108,12,SS_CENTERIMAGE
+    LTEXT           "Copyright (C) 2018",IDC_STATIC_3,1020,588,108,12,SS_CENTERIMAGE
+    LTEXT           "All Rights Reserved",IDC_STATIC_4,1020,600,108,12,SS_CENTERIMAGE
 END
 
 
@@ -116,6 +121,34 @@ IDD_MAIN AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_ICON                BITMAP                  "image\\icon.bmp"
+
+IDB_INFO                BITMAP                  "image\\info.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// PNG
+//
+
+IDB_PNG                 PNG                     "image\\icon.png"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON                ICON                    "image\\MFC.ico"
 
 #endif    // English (United Kingdom) resources
 /////////////////////////////////////////////////////////////////////////////

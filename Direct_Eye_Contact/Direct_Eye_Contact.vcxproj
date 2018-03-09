@@ -176,6 +176,12 @@
   <ItemGroup>
     <ResourceCompile Include="Direct_Eye_Contact.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="image\icon.bmp" />
+    <Image Include="image\icon.png" />
+    <Image Include="image\info.bmp" />
+    <Image Include="image\MFC.ico" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

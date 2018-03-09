@@ -69,7 +69,7 @@ public:
 	void voronoiDepth(cv::Mat& img);
 	void voronoiDepthVis(cv::Mat& img);
 
-	void saveFile(cv::Mat img_mat);
+	void saveFile(cv::Mat img_mat, cv::Rect rect);
 	void calDepth(void);
 	void calTranslation(bool vir_cam); // not suitable yet
 
