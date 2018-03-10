@@ -306,6 +306,11 @@ void CmainDlg::OnBnClickedClose()
 void CmainDlg::OnBnClickedDemo()
 {
 	EndDialog(IDD_MAIN);
+
+	// important to release cameras
+	cap_L.release();
+	cap_R.release();
+
 	CdemoDlg dlg;
 	dlg.DoModal();
 }

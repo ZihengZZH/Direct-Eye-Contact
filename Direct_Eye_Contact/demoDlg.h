@@ -21,6 +21,7 @@ private:
 	cv::VideoCapture cap_L; // left camera
 	cv::VideoCapture cap_R; // right camera
 	cv::Mat cap_mat_L, cap_mat_R;
+	cv::Mat cap_mat_L_calib, cap_mat_R_calib;
 
 	Calibrate calib;
 	FaceDepth face;

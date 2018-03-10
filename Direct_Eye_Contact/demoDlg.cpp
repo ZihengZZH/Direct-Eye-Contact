@@ -29,12 +29,13 @@ BOOL CdemoDlg::OnInitDialog()
 	if (!cap_L.isOpened())
 	{
 		cap_L = cv::VideoCapture(0);
-		//cap_R = cv::VideoCapture(1);
+		cap_R = cv::VideoCapture(1);
 		if (!cap_L.isOpened())
 		{
 			AfxMessageBox(_T("UNABLE TO OPEN CAMERAS"));
 			return FALSE;
 		}
+		face.readParameter();
 	}
 
 	SetTimer(1, 10, NULL);
@@ -67,11 +68,24 @@ void CdemoDlg::OnBnClickedStart()
 void CdemoDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	cap_L >> cap_mat_L;
-	//cap_R >> cap_mat_R;
+	cap_R >> cap_mat_R;
+
+	cv::undistort(cap_mat_L, cap_mat_L_calib, face.M1, face.D1);
+	cv::undistort(cap_mat_R, cap_mat_R_calib, face.M2, face.D2);
+	cap_mat_L_calib.copyTo(face.imgLeft_col);
+	cap_mat_R_calib.copyTo(face.imgRight_col);
 
 	if (if_synth)
 	{
-
+		if (face.facialLandmark(true) && face.facialLandmark(false))
+		{
+			cv::Mat synth_mat;
+			cap_mat_L_calib.copyTo(synth_mat);
+			face.calDepth();
+			face.delaunayDepth();
+			face.viewSynthesis(synth_mat);
+			cv::imshow("camera view", synth_mat);
+		}
 	}
 	else
 	{

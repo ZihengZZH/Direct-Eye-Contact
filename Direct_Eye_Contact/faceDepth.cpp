@@ -36,6 +36,37 @@ static void retrieve_depth(cv::Point& point, std::vector<cv::Point3f>& points_de
 }
 
 
+static void eulerAnglesToRotationMatrix(cv::Vec3f &theta, cv::Mat &output_matrix)
+{
+	theta[0] = theta[0] * CV_PI / 180.;
+	theta[1] = theta[1] * CV_PI / 180.;
+	theta[2] = theta[2] * CV_PI / 180.;
+
+	// Calculate rotation about x axis
+	cv::Mat R_x = (cv::Mat_<double>(3, 3) <<
+		1, 0, 0,
+		0, cos(theta[0]), -sin(theta[0]),
+		0, sin(theta[0]), cos(theta[0])
+		);
+
+	// Calculate rotation about y axis
+	cv::Mat R_y = (cv::Mat_<double>(3, 3) <<
+		cos(theta[1]), 0, sin(theta[1]),
+		0, 1, 0,
+		-sin(theta[1]), 0, cos(theta[1])
+		);
+
+	// Calculate rotation about z axis
+	cv::Mat R_z = (cv::Mat_<double>(3, 3) <<
+		cos(theta[2]), -sin(theta[2]), 0,
+		sin(theta[2]), cos(theta[2]), 0,
+		0, 0, 1);
+
+	// Combined rotation matrix
+	output_matrix = R_z * R_y * R_x;
+}
+
+
 FaceDepth::FaceDepth()
 {
 	dlib::deserialize("database/shape_predictor_68_face_landmarks.dat") >> pose_model;
@@ -43,6 +74,10 @@ FaceDepth::FaceDepth()
 	original_pos.clear();
 	virtual_pos.clear();
 	level_method = USE_MEDIAN;
+
+	// preprocessing for view synthesis
+	eulerAnglesToRotationMatrix(theta, Rv);
+	cv::hconcat(Rv, Tv, RvTv);
 }
 
 
@@ -102,7 +137,9 @@ bool FaceDepth::readParameter(void)
 	focal = (M1.ptr<double>(0)[0] + M1.ptr<double>(1)[1]
 		+ M2.ptr<double>(0)[0] + M2.ptr<double>(1)[1]) / 4; // in pixel
 	baseline = 1 / Q.ptr<double>(3)[2]; // in meters
-	
+	cx = M1.ptr<double>(0)[2];
+	cy = M1.ptr<double>(1)[2];
+
 	return true;
 }
 
@@ -290,7 +327,7 @@ cv::Mat FaceDepth::drawLines(void)
 }
 
 
-void FaceDepth::levelDepth(cv::Mat & img)
+void FaceDepth::levelDepth(void)
 {
 	std::vector<std::pair<int, double>> level_1, level_2, level_3; 
 	// 1 is farthest(largest) and 3 is closest(smallest)
@@ -301,7 +338,7 @@ void FaceDepth::levelDepth(cv::Mat & img)
 	double average_1, average_2, average_3;
 	double median_1, median_2, median_3;
 	double level_val_0, level_val_1, level_val_2, level_val_3;
-	cv::Mat imgDepth64F = cv::Mat(img.rows, img.cols, CV_64F);
+	cv::Mat imgDepth64F = cv::Mat(imgLeft_col.rows, imgLeft_col.cols, CV_64F);
 
 	for (int k = 0; k < 68; k++)
 	{
@@ -468,16 +505,16 @@ void FaceDepth::delaunay(cv::Subdiv2D& subdiv)
 }
 
 
-void FaceDepth::delaunayDepth(cv::Mat & img)
+void FaceDepth::delaunayDepth(void)
 {
 	cv::Subdiv2D subdiv;
 	delaunay(subdiv);
-	cv::Mat imgDepth16S = cv::Mat(img.rows, img.cols, CV_64FC1);
+	cv::Mat imgDepth16S = cv::Mat(imgLeft_col.rows, imgLeft_col.cols, CV_64FC1);
 
 	std::vector<cv::Vec6f> triangleList;
 	subdiv.getTriangleList(triangleList);
 	std::vector<cv::Point> pt(3);
-	cv::Size size = img.size();
+	cv::Size size = imgLeft_col.size();
 	cv::Rect rect(0, 0, size.width, size.height);
 	int sz = triangleList.size();
 	double depth_val, depth_0, depth_1, depth_2;
@@ -504,8 +541,10 @@ void FaceDepth::delaunayDepth(cv::Mat & img)
 	}
 
 	imgDepth16S = imgDepth16S(face_rect);
+	imgDepth16S.copyTo(depth_data_mat);
 
-	if (true)
+	// ONLY FOR TESTING
+	if (false)
 	{
 		saveFile(imgDepth16S, face_rect);
 		cv::imwrite("face_L.jpg", imgLeft_col);
@@ -631,7 +670,77 @@ void FaceDepth::calTranslation(bool vir_cam)
 }
 
 
-void FaceDepth::viewSynthesis(void)
+void FaceDepth::viewSynthesis(cv::Mat& synthesis_view)
 {
-	
+	double max_u = DBL_MIN, max_v = DBL_MIN;
+	double min_u = DBL_MAX, min_v = DBL_MAX;
+	double depth, x_cord, y_cord;
+	double X, Y, Z;
+
+	P = M1 * RvTv; // transformation matrix
+
+	cv::Vec3b bgr_pixel;
+	cv::Mat xyz, uv;
+	cv::Mat img_big = cv::Mat(2000, 2000, CV_8UC3);
+	cv::Mat img_origin;
+	imgLeft_col.copyTo(img_origin);
+	imgLeft_col.copyTo(synthesis_view);
+	synthesis_view.convertTo(synthesis_view, CV_8UC3);
+
+	for (int i = 0; i < face_rect.width; ++i)
+	{
+		for (int j = 0; j < face_rect.height; ++j)
+		{
+			depth = depth_data_mat.ptr<double>(j)[i];
+			x_cord = face_rect.x + i;
+			y_cord = face_rect.y + j;
+			Z = depth;
+			X = (Z / focal)*(x_cord - cx);
+			Y = (Z / focal)*(y_cord - cy);
+			bgr_pixel = img_origin.at<cv::Vec3b>(y_cord, x_cord);
+			xyz = (cv::Mat_<double>(4, 1) << X, Y, Z, 1);
+			uv = P * xyz;
+
+			// normalization
+			uv.ptr<double>(0)[0] /= uv.ptr<double>(2)[0];
+			uv.ptr<double>(1)[0] /= uv.ptr<double>(2)[0];
+			uv.ptr<double>(2)[0] /= uv.ptr<double>(2)[0];
+
+			double u, v;
+			u = uv.ptr<double>(0)[0];
+			v = uv.ptr<double>(1)[0];
+
+			if (u > 0 && v > 0 && u < 200 && v < 2000)
+			{
+				if (u > max_u)
+				{
+					max_u = u;
+					if (v > max_v)
+					{
+						max_v = v;
+					}
+				}
+				if (u < min_u)
+				{
+					min_u = u;
+					if (v < min_v)
+					{
+						min_v = v;
+					}
+				}
+				synthesis_view.at<cv::Vec3b>(v, u) = bgr_pixel;
+			}
+		}
+	}
+
+	cv::Rect synth_rect = cv::Rect(cv::Point2f(min_u,min_v), cv::Point2f(max_u,max_v));
+	cv::Mat synth_face = img_big(synth_rect);
+	double ratio = face_rect.width / synth_rect.width;
+	synth_rect.width *= ratio;
+	synth_rect.height *= ratio;
+	synth_rect.x = face_rect.x;
+	synth_rect.y = face_rect.y;
+	resize(synth_face, synth_face, cv::Size(synth_rect.width, synth_rect.height));
+	synth_face.copyTo(synthesis_view(synth_rect));
+
 }

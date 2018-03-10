@@ -13,6 +13,7 @@ public:
 	// calibration parameters
 	cv::Mat M1, M2, D1, D2, R, T, R1, R2, P1, P2, Q;
 	double focal, baseline, dispar, depth;
+	double cx, cy;
 	double max_depth, min_depth;
 
 	cv::Mat imgLeft_col, imgRight_col; // undistort frame from web-cam
@@ -24,7 +25,8 @@ public:
 	std::vector<double> original_pos, virtual_pos;
 	std::vector<std::pair<int, double>> depth_data_index = std::vector<std::pair<int, double>>(68);
 
-	std::vector<cv::Point3f> points_depth = std::vector<cv::Point3f>(76);
+	std::vector<cv::Point3f> points_depth = std::vector<cv::Point3f>(76); // for delaunay use
+	cv::Mat depth_data_mat;
 
 	enum
 	{
@@ -32,6 +34,11 @@ public:
 		USE_MEDIAN
 	};
 	int level_method;
+
+	/* View Synthesis */
+	cv::Mat Tv = (cv::Mat_<double>(3, 1) << 0.0, 0.2, 0.2); // translation vector
+	cv::Vec3f theta = cv::Vec3f(-30, 0, 0); // rotation euler angles
+	cv::Mat Rv, RvTv, P;
 
 private:
 	// face detection and pose estimation parameters 
@@ -62,18 +69,18 @@ public:
 	cv::Mat facialLandmarkVis(bool left); // return mat in real-time
 	cv::Mat drawLines(void); // visualise the corresponding results
 
-	void levelDepth(cv::Mat& img);
+	void levelDepth(void);
 	void levelDepthVis(cv::Mat& img, bool if_info);
 
 	void delaunay(cv::Subdiv2D& subdiv);
-	void delaunayDepth(cv::Mat& img);
+	void delaunayDepth(void);
 	void delaunayDepthVis(cv::Mat& img);
 
 	void saveFile(cv::Mat img_mat, cv::Rect rect);
 	void calDepth(void);
 	void calTranslation(bool vir_cam); // not suitable yet
 
-	void viewSynthesis(void);
+	void viewSynthesis(cv::Mat& synthesis_view);
 
 };
 
