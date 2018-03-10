@@ -3,6 +3,7 @@
 #include "resource.h"
 #include "faceDepth.h"
 #include "calib.h"
+#include "demoDlg.h"
 #include "afxwin.h"
 
 
@@ -15,6 +16,8 @@ public:
 	CmainDlg();
 	enum { IDD = IDD_MAIN };
 	BOOL OnInitDialog();
+
+private:
 	cv::VideoCapture cap_L; // left camera 
 	cv::VideoCapture cap_R; // right camera
 	cv::Mat cap_mat_L, cap_mat_R;
@@ -55,10 +58,11 @@ public:
 	afx_msg void OnBnClickedInfo();
 	afx_msg void OnBnClickedClose();
 	afx_msg void OnBnClickedSynth();
+	afx_msg void OnBnClickedDemo();
 
 	CStatic m_Logo;
 	CStatic m_icon;
 	CStatic m_info;
-	
+
 };
 

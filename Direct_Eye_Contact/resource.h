@@ -7,6 +7,7 @@
 #define IDB_INFO                        104
 #define IDB_PNG                         108
 #define IDI_ICON                        109
+#define IDD_DEMO                        110
 #define IDC_CAM_L                       1001
 #define ID_OPEN                         1002
 #define IDC_CAM_R                       1003
@@ -28,14 +29,17 @@
 #define IDC_STATIC_3                    1018
 #define IDC_STATIC_4                    1019
 #define IDC_STATIC_INFO                 1020
+#define IDC_DEMO                        1021
+#define IDC_START                       1022
+#define IDC_SIZE                        1023
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        110
+#define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1021
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

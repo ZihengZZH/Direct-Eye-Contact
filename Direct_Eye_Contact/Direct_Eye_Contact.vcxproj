@@ -155,6 +155,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="calib.h" />
+    <ClInclude Include="demoDlg.h" />
     <ClInclude Include="faceDepth.h" />
     <ClInclude Include="mainDlg.h" />
     <ClInclude Include="resource.h" />
@@ -163,6 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calib.cpp" />
+    <ClCompile Include="demoDlg.cpp" />
     <ClCompile Include="faceDepth.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainDlg.cpp" />

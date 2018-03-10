@@ -454,7 +454,7 @@ void FaceDepth::levelDepthVis(cv::Mat& img, bool if_info)
 }
 
 
-void FaceDepth::voronoi(cv::Subdiv2D& subdiv)
+void FaceDepth::delaunay(cv::Subdiv2D& subdiv)
 {
 	cv::Rect rect(0, 0, imgLeft_col.size().width, imgLeft_col.size().height);
 	subdiv = cv::Subdiv2D(rect);
@@ -468,10 +468,10 @@ void FaceDepth::voronoi(cv::Subdiv2D& subdiv)
 }
 
 
-void FaceDepth::voronoiDepth(cv::Mat & img)
+void FaceDepth::delaunayDepth(cv::Mat & img)
 {
 	cv::Subdiv2D subdiv;
-	voronoi(subdiv);
+	delaunay(subdiv);
 	cv::Mat imgDepth16S = cv::Mat(img.rows, img.cols, CV_64FC1);
 
 	std::vector<cv::Vec6f> triangleList;
@@ -514,10 +514,10 @@ void FaceDepth::voronoiDepth(cv::Mat & img)
 }
 
 
-void FaceDepth::voronoiDepthVis(cv::Mat & img)
+void FaceDepth::delaunayDepthVis(cv::Mat & img)
 {
 	cv::Subdiv2D subdiv;
-	voronoi(subdiv);
+	delaunay(subdiv);
 
 	std::vector<cv::Vec6f> triangleList;
 	subdiv.getTriangleList(triangleList);

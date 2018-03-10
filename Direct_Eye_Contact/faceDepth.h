@@ -65,9 +65,9 @@ public:
 	void levelDepth(cv::Mat& img);
 	void levelDepthVis(cv::Mat& img, bool if_info);
 
-	void voronoi(cv::Subdiv2D& subdiv);
-	void voronoiDepth(cv::Mat& img);
-	void voronoiDepthVis(cv::Mat& img);
+	void delaunay(cv::Subdiv2D& subdiv);
+	void delaunayDepth(cv::Mat& img);
+	void delaunayDepthVis(cv::Mat& img);
 
 	void saveFile(cv::Mat img_mat, cv::Rect rect);
 	void calDepth(void);

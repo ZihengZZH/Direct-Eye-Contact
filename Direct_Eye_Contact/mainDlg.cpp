@@ -88,6 +88,7 @@ BEGIN_MESSAGE_MAP(CmainDlg, CDialogEx)
 	ON_BN_CLICKED(ID_CLOSE, &CmainDlg::OnBnClickedClose)
 	ON_BN_CLICKED(ID_RECORD, &CmainDlg::OnBnClickedRecord)
 	ON_BN_CLICKED(ID_CALIB, &CmainDlg::OnBnClickedCalib)
+	ON_BN_CLICKED(IDC_DEMO, &CmainDlg::OnBnClickedDemo)
 END_MESSAGE_MAP()
 
 
@@ -202,7 +203,7 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 				if (depth_method == USE_LEVEL)
 					face.levelDepthVis(depth_mat, false);
 				if (depth_method == USE_VORONOI)
-					face.voronoiDepthVis(depth_mat);
+					face.delaunayDepthVis(depth_mat);
 				cv::imshow("depth map", depth_mat);
 			}
 		}
@@ -299,4 +300,12 @@ void CmainDlg::OnBnClickedClose()
 	if_info = FALSE;
 	if_depth = FALSE;
 	if_synth = FALSE;
+}
+
+
+void CmainDlg::OnBnClickedDemo()
+{
+	EndDialog(IDD_MAIN);
+	CdemoDlg dlg;
+	dlg.DoModal();
 }
