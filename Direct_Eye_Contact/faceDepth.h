@@ -15,6 +15,7 @@ public:
 	double focal, baseline, dispar, depth;
 	double cx, cy;
 	double max_depth, min_depth;
+	bool if_depth = false;
 
 	cv::Mat imgLeft_col, imgRight_col; // undistort frame from web-cam
 	dlib::full_object_detection shapes_L, shapes_R;
@@ -72,13 +73,13 @@ public:
 	void levelDepth(void);
 	void levelDepthVis(cv::Mat& img, bool if_info);
 
-	void delaunay(cv::Subdiv2D& subdiv);
+	bool delaunay(cv::Subdiv2D& subdiv);
 	void delaunayDepth(void);
 	void delaunayDepthVis(cv::Mat& img);
 
 	void saveFile(cv::Mat img_mat, cv::Rect rect);
-	void calDepth(void);
-	void calTranslation(bool vir_cam); // not suitable yet
+	bool calcDepth(void);
+	void calcTranslation(bool vir_cam); // not suitable yet
 
 	void viewSynthesis(cv::Mat& synthesis_view);
 

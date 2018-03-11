@@ -16,6 +16,7 @@ public:
 	CmainDlg();
 	enum { IDD = IDD_MAIN };
 	BOOL OnInitDialog();
+	void EndDialog(int nResult);
 
 private:
 	cv::VideoCapture cap_L; // left camera 

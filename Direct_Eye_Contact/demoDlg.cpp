@@ -26,7 +26,7 @@ BOOL CdemoDlg::OnInitDialog()
 	::ShowWindow(hParent, SW_HIDE);
 
 	// IN CASE USER HAS OPENED THE CAMERAS
-	if (!cap_L.isOpened())
+	if (!cap_L.isOpened() || !cap_R.isOpened())
 	{
 		cap_L = cv::VideoCapture(0);
 		cap_R = cv::VideoCapture(1);
@@ -77,15 +77,26 @@ void CdemoDlg::OnTimer(UINT_PTR nIDEvent)
 
 	if (if_synth)
 	{
-		if (face.facialLandmark(true) && face.facialLandmark(false))
+		cv::Mat synth_mat;
+		cap_mat_L_calib.copyTo(synth_mat);
+		try
 		{
-			cv::Mat synth_mat;
-			cap_mat_L_calib.copyTo(synth_mat);
-			face.calDepth();
-			face.delaunayDepth();
-			face.viewSynthesis(synth_mat);
-			cv::imshow("camera view", synth_mat);
+			if (face.facialLandmark(true) && face.facialLandmark(false))
+			{
+				face.calcDepth();
+				face.delaunayDepth();
+				if (face.if_depth)
+					face.viewSynthesis(synth_mat);
+			}
 		}
+		catch (std::exception)
+		{
+		}
+
+		CRect rect;
+		GetDlgItem(IDC_DEMO)->GetClientRect(&rect);
+		cv::resize(synth_mat, synth_mat, cv::Size(rect.Width(), rect.Height()));
+		cv::imshow("camera view", synth_mat);
 	}
 	else
 	{

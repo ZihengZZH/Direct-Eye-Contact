@@ -2,6 +2,10 @@
 #include "faceDepth.h"
 
 
+#define WIDTH 640
+#define HEIGHT 480
+
+
 static void average_vec(std::vector<std::pair<int, double> >& temp, double& avg)
 {
 	double sum = 0;
@@ -33,6 +37,31 @@ static void retrieve_depth(cv::Point& point, std::vector<cv::Point3f>& points_de
 			depth = point_depth.z;
 		}
 	}
+}
+
+
+bool notInsideImage(cv::Rect& rect)
+{
+	return (rect.x < 0 || rect.y < 0
+		|| rect.height == 0
+		|| rect.width == 0
+		|| rect.x + rect.height > HEIGHT
+		|| rect.y + rect.width > WIDTH);
+}
+
+
+bool notInsideContour(dlib::full_object_detection& shape, cv::Rect& rect)
+{
+	for (int i = 0; i < 68; ++i)
+	{
+		if (shape.part(i).x() < rect.x || shape.part(i).y() < rect.y
+			|| shape.part(i).x() > rect.x + rect.width
+			|| shape.part(i).y() > rect.y + rect.height)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 
@@ -214,14 +243,23 @@ bool FaceDepth::facialLandmark(bool left)
 			shapes_L = shapes[0];
 
 			int border_h = shapes[0].part(36).x() - shapes[0].part(0).x();
-			int border_v = shapes[0].part(38).y() - shapes[0].part(19).y();
+			int border_v = shapes[0].part(8).y() - shapes[0].part(57).y();
 			cv::Rect face = dlib2opencv(faces[0]);
 			face.x -= border_h;
-			face.y -= border_v * 2;
+			face.y -= border_v;
 			face.width += border_h * 2;
 			face.height += border_v * 2;
 
 			face_rect = face;
+
+			// to check the rect in the image plane
+			// to check the landmarks inside the contour
+			if (notInsideImage(face)
+				|| notInsideContour(shapes[0], face))
+			{
+				return false;
+			}
+
 			borders[0] = cv::Point2i(face.x, face.y);
 			borders[1] = cv::Point2i(face.x, face.y + face.height);
 			borders[2] = cv::Point2i(face.x + face.width, face.y + face.height);
@@ -259,13 +297,22 @@ cv::Mat FaceDepth::facialLandmarkVis(bool left)
 	if (!shapes.empty())
 	{
 		int border_h = shapes[0].part(36).x() - shapes[0].part(0).x();
-		int border_v = shapes[0].part(38).y() - shapes[0].part(19).y();
+		int border_v = shapes[0].part(8).y() - shapes[0].part(57).y();
 
 		cv::Rect face = dlib2opencv(faces[0]);
 		face.x -= border_h;
-		face.y -= border_v * 2;
+		face.y -= border_v;
 		face.width += border_h * 2;
-		face.height += border_v * 3;
+		face.height += border_v * 2;
+
+		// to check the rect in the image plane
+		// to check the landmarks inside the contour
+		if (notInsideImage(face)
+			|| notInsideContour(shapes[0], face))
+		{
+			return frame_facial;
+		}
+
 		cv::rectangle(frame_facial, face, cv::Scalar(0, 255, 0), 0.7);
 
 		for (int i = 0; i < 68; i++)
@@ -491,24 +538,33 @@ void FaceDepth::levelDepthVis(cv::Mat& img, bool if_info)
 }
 
 
-void FaceDepth::delaunay(cv::Subdiv2D& subdiv)
+bool FaceDepth::delaunay(cv::Subdiv2D& subdiv)
 {
 	cv::Rect rect(0, 0, imgLeft_col.size().width, imgLeft_col.size().height);
-	subdiv = cv::Subdiv2D(rect);
+	subdiv.initDelaunay(rect);
 
 	for (int i = 0; i < points_depth.size(); ++i)
 	{
-		cv::Point2i point = cv::Point2i(points_depth[i].x, points_depth[i].y);
-		subdiv.insert(point);
+		if (points_depth[i].x < 0 || points_depth[i].y < 0
+			|| points_depth[i].x > HEIGHT || points_depth[i].y > WIDTH)
+			return false;
+
+		subdiv.insert(cv::Point2i(points_depth[i].x, points_depth[i].y));
 	}
 
+	return true;
 }
 
 
 void FaceDepth::delaunayDepth(void)
 {
 	cv::Subdiv2D subdiv;
-	delaunay(subdiv);
+	if (!delaunay(subdiv))
+	{
+		if_depth = false;
+		return;
+	}
+
 	cv::Mat imgDepth16S = cv::Mat(imgLeft_col.rows, imgLeft_col.cols, CV_64FC1);
 
 	std::vector<cv::Vec6f> triangleList;
@@ -542,6 +598,7 @@ void FaceDepth::delaunayDepth(void)
 
 	imgDepth16S = imgDepth16S(face_rect);
 	imgDepth16S.copyTo(depth_data_mat);
+	if_depth = true;
 
 	// ONLY FOR TESTING
 	if (false)
@@ -556,7 +613,8 @@ void FaceDepth::delaunayDepth(void)
 void FaceDepth::delaunayDepthVis(cv::Mat & img)
 {
 	cv::Subdiv2D subdiv;
-	delaunay(subdiv);
+	if (!delaunay(subdiv))
+		return;
 
 	std::vector<cv::Vec6f> triangleList;
 	subdiv.getTriangleList(triangleList);
@@ -605,7 +663,7 @@ void FaceDepth::saveFile(cv::Mat img_mat, cv::Rect rect)
 }
 
 
-void FaceDepth::calDepth(void)
+bool FaceDepth::calcDepth(void)
 {
 	max_depth = 0, min_depth = 1000;
 	for (int i = 0; i < 68; ++i)
@@ -631,11 +689,17 @@ void FaceDepth::calDepth(void)
 	points_depth[74] = cv::Point3f(face_rect.x, face_rect.y + face_rect.width, 2 * max_depth - min_depth);
 	points_depth[75] = cv::Point3f(face_rect.x, face_rect.y + face_rect.width / 2, 2 * max_depth - min_depth);
 
-	//drawLines();
+	// to check the rect in the image plane
+	if (notInsideImage(face_rect))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 
-void FaceDepth::calTranslation(bool vir_cam)
+void FaceDepth::calcTranslation(bool vir_cam)
 {
 	// READ PARAMETERS FIRST
 	//readParameter();
@@ -647,7 +711,7 @@ void FaceDepth::calTranslation(bool vir_cam)
 	std::vector<double> distance;
 	//cv::undistort(imgLeft_col, mat_L, M1, D1);
 	//cv::undistort(imgRight_col, mat_R, M2, D2);
-	calDepth();
+	calcDepth();
 
 	if (!vir_cam)
 		original_pos = depth_data;
@@ -710,7 +774,7 @@ void FaceDepth::viewSynthesis(cv::Mat& synthesis_view)
 			u = uv.ptr<double>(0)[0];
 			v = uv.ptr<double>(1)[0];
 
-			if (u > 0 && v > 0 && u < 200 && v < 2000)
+			if (u > 0 && v > 0 && u < 2000 && v < 2000)
 			{
 				if (u > max_u)
 				{
@@ -728,7 +792,7 @@ void FaceDepth::viewSynthesis(cv::Mat& synthesis_view)
 						min_v = v;
 					}
 				}
-				synthesis_view.at<cv::Vec3b>(v, u) = bgr_pixel;
+				img_big.at<cv::Vec3b>(v, u) = bgr_pixel;
 			}
 		}
 	}
@@ -740,7 +804,14 @@ void FaceDepth::viewSynthesis(cv::Mat& synthesis_view)
 	synth_rect.height *= ratio;
 	synth_rect.x = face_rect.x;
 	synth_rect.y = face_rect.y;
-	resize(synth_face, synth_face, cv::Size(synth_rect.width, synth_rect.height));
-	synth_face.copyTo(synthesis_view(synth_rect));
+
+	if (notInsideImage(synth_rect))
+	{
+	}
+	else
+	{
+		resize(synth_face, synth_face, cv::Size(synth_rect.width, synth_rect.height));
+		synth_face.copyTo(synthesis_view(synth_rect));
+	}
 
 }

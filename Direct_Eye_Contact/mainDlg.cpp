@@ -69,6 +69,17 @@ BOOL CmainDlg::OnInitDialog()
 }
 
 
+void CmainDlg::EndDialog(int nResult)
+{
+	// important to release the cameras
+	cap_L.release();
+	cap_R.release();
+	KillTimer(1);
+	
+	CDialogEx::EndDialog(IDD_MAIN);
+}
+
+
 void CmainDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
@@ -94,7 +105,7 @@ END_MESSAGE_MAP()
 
 void CmainDlg::OnBnClickedOpen()
 {
-	
+
 	/*if (false)
 	{
 		std::string pic_path = "./test/test.jpg";
@@ -116,7 +127,7 @@ void CmainDlg::OnBnClickedOpen()
 		pBoxOne->SetWindowText(str);
 		str.ReleaseBuffer();
 	}*/
-	
+
 	// IN CASE USER HAS OPENED THE CAMERAS
 	if (!cap_L.isOpened() && !cap_R.isOpened())
 	{
@@ -128,14 +139,14 @@ void CmainDlg::OnBnClickedOpen()
 			return;
 		}
 	}
-	
+
 	SetTimer(1, 10, NULL);
 }
 
 
 void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	
+
 	cap_L >> cap_mat_L;
 	cap_R >> cap_mat_R;
 
@@ -174,38 +185,65 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 
 	if (already_calib)
 	{
-		cv::undistort(cap_mat_L, cap_mat_L_calib, face.M1, face.D1);
-		cv::undistort(cap_mat_R, cap_mat_R_calib, face.M2, face.D2);
+		try
+		{
+			cv::undistort(cap_mat_L, cap_mat_L_calib, face.M1, face.D1);
+			cv::undistort(cap_mat_R, cap_mat_R_calib, face.M2, face.D2);
+		}
+		catch (std::exception)
+		{
+			cap_mat_L.copyTo(cap_mat_L_calib);
+			cap_mat_R.copyTo(cap_mat_R_calib);
+		}
+
 		cap_mat_L_calib.copyTo(face.imgLeft_col);
 		cap_mat_R_calib.copyTo(face.imgRight_col);
 
 		if (if_landmarks)
 		{
-			cap_mat_L_calib = face.facialLandmarkVis(true);
-			cap_mat_R_calib = face.facialLandmarkVis(false);
+			try
+			{
+				cap_mat_L_calib = face.facialLandmarkVis(true);
+				cap_mat_R_calib = face.facialLandmarkVis(false);
+			}
+			catch (std::exception)
+			{
+			}
 		}
 
 		if (if_info)
 		{
-			if (face.facialLandmark(true) && face.facialLandmark(false))
+			try
 			{
-				face.levelDepthVis(cap_mat_L_calib, true);
+				if (face.facialLandmark(true) && face.facialLandmark(false))
+				{
+					face.levelDepthVis(cap_mat_L_calib, true);
+				}
+			}
+			catch (std::exception)
+			{
 			}
 		}
 
 		if (if_depth)
 		{
-			if (face.facialLandmark(true) && face.facialLandmark(false))
+			cv::Mat depth_mat;
+			cap_mat_L_calib.copyTo(depth_mat);
+			try
 			{
-				cv::Mat depth_mat;
-				cap_mat_L_calib.copyTo(depth_mat);
-				face.calDepth();
-				if (depth_method == USE_LEVEL)
-					face.levelDepthVis(depth_mat, false);
-				if (depth_method == USE_VORONOI)
-					face.delaunayDepthVis(depth_mat);
-				cv::imshow("depth map", depth_mat);
+				if (face.facialLandmark(true) && face.facialLandmark(false))
+				{
+					face.calcDepth();
+					if (depth_method == USE_LEVEL)
+						face.levelDepthVis(depth_mat, false);
+					if (depth_method == USE_VORONOI)
+						face.delaunayDepthVis(depth_mat);
+				}
 			}
+			catch (std::exception)
+			{
+			}
+			cv::imshow("depth map", depth_mat);
 		}
 		else
 		{
@@ -217,7 +255,22 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 
 		if (if_synth)
 		{
-
+			cv::Mat synth_mat;
+			cap_mat_L_calib.copyTo(synth_mat);
+			try
+			{
+				if (face.facialLandmark(true) && face.facialLandmark(false))
+				{
+					face.calcDepth();
+					face.delaunayDepth();
+					if (face.if_depth)
+						face.viewSynthesis(synth_mat);
+				}
+			}
+			catch (std::exception)
+			{
+			}
+			cv::imshow("synthesis", synth_mat);
 		}
 		else
 		{
@@ -226,7 +279,7 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 			cv::resize(mat_synth_standby, mat_synth_standby, cv::Size(rect.Width(), rect.Height()));
 			cv::imshow("synthesis", mat_synth_standby);
 		}
-		
+
 		cv::imshow("left view", cap_mat_L_calib);
 		cv::imshow("right view", cap_mat_R_calib);
 	}
@@ -295,7 +348,7 @@ void CmainDlg::OnBnClickedSynth()
 
 
 void CmainDlg::OnBnClickedClose()
-{	
+{
 	if_landmarks = FALSE;
 	if_info = FALSE;
 	if_depth = FALSE;
@@ -306,10 +359,6 @@ void CmainDlg::OnBnClickedClose()
 void CmainDlg::OnBnClickedDemo()
 {
 	EndDialog(IDD_MAIN);
-
-	// important to release cameras
-	cap_L.release();
-	cap_R.release();
 
 	CdemoDlg dlg;
 	dlg.DoModal();
