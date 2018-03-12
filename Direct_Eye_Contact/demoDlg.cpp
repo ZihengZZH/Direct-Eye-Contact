@@ -70,6 +70,7 @@ void CdemoDlg::OnTimer(UINT_PTR nIDEvent)
 	cap_L >> cap_mat_L;
 	cap_R >> cap_mat_R;
 
+	// rectification
 	cv::undistort(cap_mat_L, cap_mat_L_calib, face.M1, face.D1);
 	cv::undistort(cap_mat_R, cap_mat_R_calib, face.M2, face.D2);
 	cap_mat_L_calib.copyTo(face.imgLeft_col);

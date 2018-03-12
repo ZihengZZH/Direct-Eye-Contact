@@ -79,7 +79,7 @@ public:
 
 	void saveFile(cv::Mat img_mat, cv::Rect rect);
 	bool calcDepth(void);
-	void calcTranslation(bool vir_cam); // not suitable yet
+	void calcTranslation(bool vir_cam);
 
 	void viewSynthesis(cv::Mat& synthesis_view);
 

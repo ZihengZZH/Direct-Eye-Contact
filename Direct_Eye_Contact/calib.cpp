@@ -249,7 +249,7 @@ void Calibrate::stereoCalib(void)
 
 	bool isVerticalStereo = fabs(P2.at<double>(1, 3)) > fabs(P2.at<double>(0, 3));
 
-	// COMPUTE AND DISPLAY RECTIFICATION
+	// COMPUTE AND DISPLAY RECTIFICATION (NOT NECESSARY)
 	if (!showRectified)
 		return;
 
@@ -362,6 +362,13 @@ void Calibrate::readParameter(void)
 
 void Calibrate::rectifyImage(std::string faceL, std::string faceR)
 {
+
+	/*
+	void cv::undistort();
+	Transforms an image to compensate for lens distortion.
+	The function transforms an image to compensate radial and tangential lens distortion.
+	The function is simply a combination of cv::initUndistortRectifyMap (with unity R ) and cv::remap (with bilinear interpolation).
+	*/
 
 	readParameter();
 	cv::Size imageSize;

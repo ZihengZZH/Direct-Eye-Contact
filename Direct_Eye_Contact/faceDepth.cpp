@@ -4,8 +4,11 @@
 
 #define WIDTH 640
 #define HEIGHT 480
+#define FILL_HOLES true
+#define RESIZE_FACE false
 
 
+// return average value of a vector
 static void average_vec(std::vector<std::pair<int, double> >& temp, double& avg)
 {
 	double sum = 0;
@@ -15,6 +18,7 @@ static void average_vec(std::vector<std::pair<int, double> >& temp, double& avg)
 }
 
 
+// return median value of a vector
 static void median_vec(std::vector<std::pair<int, double>>&temp, double& median)
 {
 	if (temp.size() % 2 == 0)
@@ -28,6 +32,7 @@ static void median_vec(std::vector<std::pair<int, double>>&temp, double& median)
 }
 
 
+// return depth value according to the point
 static void retrieve_depth(cv::Point& point, std::vector<cv::Point3f>& points_depth, double& depth)
 {
 	for (auto point_depth : points_depth)
@@ -40,6 +45,7 @@ static void retrieve_depth(cv::Point& point, std::vector<cv::Point3f>& points_de
 }
 
 
+// to check if rect inside the image
 bool notInsideImage(cv::Rect& rect)
 {
 	return (rect.x < 0 || rect.y < 0
@@ -50,6 +56,7 @@ bool notInsideImage(cv::Rect& rect)
 }
 
 
+// to check if points inside a contour
 bool notInsideContour(dlib::full_object_detection& shape, cv::Rect& rect)
 {
 	for (int i = 0; i < 68; ++i)
@@ -65,6 +72,7 @@ bool notInsideContour(dlib::full_object_detection& shape, cv::Rect& rect)
 }
 
 
+// return rotation matrix based on euler angles
 static void eulerAnglesToRotationMatrix(cv::Vec3f &theta, cv::Mat &output_matrix)
 {
 	theta[0] = theta[0] * CV_PI / 180.;
@@ -374,6 +382,7 @@ cv::Mat FaceDepth::drawLines(void)
 }
 
 
+// depth estimation with level
 void FaceDepth::levelDepth(void)
 {
 	std::vector<std::pair<int, double>> level_1, level_2, level_3; 
@@ -452,6 +461,7 @@ void FaceDepth::levelDepth(void)
 }
 
 
+// depth estimation with level visualisation
 void FaceDepth::levelDepthVis(cv::Mat& img, bool if_info)
 {
 	if (if_info)
@@ -556,6 +566,7 @@ bool FaceDepth::delaunay(cv::Subdiv2D& subdiv)
 }
 
 
+// depth estimation with delaunay triangulation
 void FaceDepth::delaunayDepth(void)
 {
 	cv::Subdiv2D subdiv;
@@ -610,6 +621,7 @@ void FaceDepth::delaunayDepth(void)
 }
 
 
+// depth estimation with delaunay triangulation visualisation
 void FaceDepth::delaunayDepthVis(cv::Mat & img)
 {
 	cv::Subdiv2D subdiv;
@@ -663,6 +675,7 @@ void FaceDepth::saveFile(cv::Mat img_mat, cv::Rect rect)
 }
 
 
+// calculate depth based on corresponding landmarks
 bool FaceDepth::calcDepth(void)
 {
 	max_depth = 0, min_depth = 1000;
@@ -699,6 +712,7 @@ bool FaceDepth::calcDepth(void)
 }
 
 
+// Not well accomplished yet
 void FaceDepth::calcTranslation(bool vir_cam)
 {
 	// READ PARAMETERS FIRST
@@ -722,18 +736,19 @@ void FaceDepth::calcTranslation(bool vir_cam)
 	{
 		for (int i = 0; i < 68; i++)
 		{
-			std::cout << i << "\t ori " << original_pos[i] << "\t vir " << virtual_pos[i] << std::endl;
+			//std::cout << i << "\t ori " << original_pos[i] << "\t vir " << virtual_pos[i] << std::endl;
 			dist = sqrt(pow(virtual_pos[i], 2) - pow(original_pos[i], 2));
-			std::cout << i << " distance " << dist << std::endl;
+			//std::cout << i << " distance " << dist << std::endl;
 			distance.push_back(dist);
 		}
 		dist = std::accumulate(distance.begin(), distance.end(), 0.0) / distance.size();
-		std::cout << "DISTANCE " << dist << std::endl;
+		//std::cout << "DISTANCE " << dist << std::endl;
 	}
 
 }
 
 
+// generate the synthesised view and re-draw to the image
 void FaceDepth::viewSynthesis(cv::Mat& synthesis_view)
 {
 	double max_u = DBL_MIN, max_v = DBL_MIN;
@@ -743,7 +758,7 @@ void FaceDepth::viewSynthesis(cv::Mat& synthesis_view)
 
 	P = M1 * RvTv; // transformation matrix
 
-	cv::Vec3b bgr_pixel;
+	cv::Vec3b bgr_pixel; // colour image 8UC3
 	cv::Mat xyz, uv;
 	cv::Mat img_big = cv::Mat(2000, 2000, CV_8UC3);
 	cv::Mat img_origin;
@@ -793,25 +808,44 @@ void FaceDepth::viewSynthesis(cv::Mat& synthesis_view)
 					}
 				}
 				img_big.at<cv::Vec3b>(v, u) = bgr_pixel;
+
+				// fill the holes above and below one pixel
+				if (FILL_HOLES)
+				{
+					img_big.at<cv::Vec3b>(v - 1, u) = bgr_pixel;
+					img_big.at<cv::Vec3b>(v + 1, u) = bgr_pixel;
+				}
 			}
 		}
 	}
 
 	cv::Rect synth_rect = cv::Rect(cv::Point2f(min_u,min_v), cv::Point2f(max_u,max_v));
 	cv::Mat synth_face = img_big(synth_rect);
-	double ratio = face_rect.width / synth_rect.width;
-	synth_rect.width *= ratio;
-	synth_rect.height *= ratio;
-	synth_rect.x = face_rect.x;
-	synth_rect.y = face_rect.y;
 
-	if (notInsideImage(synth_rect))
+	if (!RESIZE_FACE)
 	{
+		// resize synthesised face
+		double ratio = face_rect.width / synth_rect.width;
+		synth_rect.width *= ratio;
+		synth_rect.height *= ratio;
+		synth_rect.x = face_rect.x;
+		synth_rect.y = face_rect.y;
+
+		if (notInsideImage(synth_rect))
+		{
+		}
+		else
+		{
+			resize(synth_face, synth_face, cv::Size(synth_rect.width, synth_rect.height));
+			synth_face.copyTo(synthesis_view(synth_rect));
+		}
 	}
 	else
 	{
-		resize(synth_face, synth_face, cv::Size(synth_rect.width, synth_rect.height));
-		synth_face.copyTo(synthesis_view(synth_rect));
+		// NOT resize the synthesised face
+		resize(synth_face, synth_face, cv::Size(face_rect.width, face_rect.height));
+		synth_face.copyTo(synthesis_view(face_rect));
 	}
+	
 
 }

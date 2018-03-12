@@ -22,6 +22,7 @@ BOOL CmainDlg::OnInitDialog()
 	GetDlgItem(ID_DEPTH)->SetFont(&m_font);
 	GetDlgItem(ID_SYNTH)->SetFont(&m_font);
 	GetDlgItem(ID_CLOSE)->SetFont(&m_font);
+	GetDlgItem(IDC_DEMO)->SetFont(&m_font);
 
 	GetDlgItem(ID_FACIAL)->SetFont(&m_font_small);
 	GetDlgItem(ID_INFO)->SetFont(&m_font_small);
@@ -140,7 +141,7 @@ void CmainDlg::OnBnClickedOpen()
 		}
 	}
 
-	SetTimer(1, 10, NULL);
+	SetTimer(1, 10, NULL); // 10ms elapse -> max 100fps 
 }
 
 
@@ -187,6 +188,7 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 		try
 		{
+			// rectification
 			cv::undistort(cap_mat_L, cap_mat_L_calib, face.M1, face.D1);
 			cv::undistort(cap_mat_R, cap_mat_R_calib, face.M2, face.D2);
 		}
@@ -236,7 +238,7 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 					face.calcDepth();
 					if (depth_method == USE_LEVEL)
 						face.levelDepthVis(depth_mat, false);
-					if (depth_method == USE_VORONOI)
+					if (depth_method == USE_DELAUNAY)
 						face.delaunayDepthVis(depth_mat);
 				}
 			}

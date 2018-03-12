@@ -29,6 +29,8 @@ private:
 	FaceDepth face;
 	BOOL if_record, if_calib, if_landmarks, if_info, if_depth, if_synth;
 	BOOL already_calib;
+
+	// MFC necessary variables
 	CEdit* pBoxOne;
 	CString m_str;
 	CImage m_logo;
@@ -38,9 +40,9 @@ private:
 	enum
 	{
 		USE_LEVEL = 0,
-		USE_VORONOI
+		USE_DELAUNAY
 	};
-	int depth_method = 1;
+	int depth_method = 1; // delaunay over level
 
 
 protected:
