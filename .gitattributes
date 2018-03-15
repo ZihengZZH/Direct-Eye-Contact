@@ -7,6 +7,7 @@
 # Recognise the MATLAB files
 ###############################################################################
 matlab-demo/* linguist-vendored=true
+matlab-demo/*.m linguist-detectable=true
 
 ###############################################################################
 # Set default behavior for command prompt diff.
