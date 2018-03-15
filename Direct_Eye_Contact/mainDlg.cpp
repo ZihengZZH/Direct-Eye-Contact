@@ -73,8 +73,12 @@ BOOL CmainDlg::OnInitDialog()
 void CmainDlg::EndDialog(int nResult)
 {
 	// important to release the cameras
-	cap_L.release();
-	cap_R.release();
+	if (cap_L.isOpened() && cap_R.isOpened())
+	{
+		cap_L.release();
+		cap_R.release();
+	}
+	
 	KillTimer(1);
 	
 	CDialogEx::EndDialog(IDD_MAIN);

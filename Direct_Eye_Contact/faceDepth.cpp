@@ -5,7 +5,7 @@
 #define WIDTH 640
 #define HEIGHT 480
 #define FILL_HOLES true
-#define RESIZE_FACE false
+#define RESIZE_FACE true
 
 
 // return average value of a vector

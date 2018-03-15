@@ -37,8 +37,8 @@ public:
 	int level_method;
 
 	/* View Synthesis */
-	cv::Mat Tv = (cv::Mat_<double>(3, 1) << 0.0, 0.2, 0.2); // translation vector
-	cv::Vec3f theta = cv::Vec3f(-30, 0, 0); // rotation euler angles
+	cv::Mat Tv = (cv::Mat_<double>(3, 1) << 0.0, -0.25, 0.2); // translation vector
+	cv::Vec3f theta = cv::Vec3f(-15, 0, 0); // rotation euler angles
 	cv::Mat Rv, RvTv, P;
 
 private:
