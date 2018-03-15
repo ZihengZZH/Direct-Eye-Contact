@@ -5,6 +5,19 @@ VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Direct_Eye_Contact", "Direct_Eye_Contact\Direct_Eye_Contact.vcxproj", "{835B323E-8417-4D31-AB81-542725DFC191}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "matlab-demo", "matlab-demo", "{8DFB214F-9EA4-49DE-90C4-53E94E116323}"
+	ProjectSection(SolutionItems) = preProject
+		matlab-demo\3d_xy.png = matlab-demo\3d_xy.png
+		matlab-demo\3d_yz.png = matlab-demo\3d_yz.png
+		matlab-demo\demo.m = matlab-demo\demo.m
+		matlab-demo\face.xyz = matlab-demo\face.xyz
+		matlab-demo\face_T.xyz = matlab-demo\face_T.xyz
+		matlab-demo\projectPoints.m = matlab-demo\projectPoints.m
+		matlab-demo\synth.PNG = matlab-demo\synth.PNG
+		matlab-demo\synth_20.png = matlab-demo\synth_20.png
+		matlab-demo\synth_25.png = matlab-demo\synth_25.png
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
