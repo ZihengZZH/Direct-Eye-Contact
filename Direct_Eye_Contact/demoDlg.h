@@ -28,6 +28,9 @@ private:
 	BOOL if_synth;
 	CFont m_font;
 	HICON m_hIcon;
+    DWORD start_time, end_time;
+    UINT frame_second, count = 0;
+    std::string fps;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);

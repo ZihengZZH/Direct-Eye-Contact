@@ -76,6 +76,17 @@ void CdemoDlg::OnTimer(UINT_PTR nIDEvent)
 	cap_mat_L_calib.copyTo(face.imgLeft_col);
 	cap_mat_R_calib.copyTo(face.imgRight_col);
 
+    if (count == 0)
+        start_time = GetTickCount();
+    count++;
+    if (count % 10 == 0)
+    {
+        end_time = GetTickCount();
+        frame_second = 10000.0 / (end_time - start_time);
+        count = 0;
+    }
+    fps = "FPS: " + std::to_string(frame_second);
+
 	if (if_synth)
 	{
 		cv::Mat synth_mat;
@@ -97,14 +108,16 @@ void CdemoDlg::OnTimer(UINT_PTR nIDEvent)
 		CRect rect;
 		GetDlgItem(IDC_DEMO)->GetClientRect(&rect);
 		cv::resize(synth_mat, synth_mat, cv::Size(rect.Width(), rect.Height()));
-		cv::imshow("camera view", synth_mat);
+        cv::putText(synth_mat, fps, cv::Point(50, 900), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 255, 255), 2, 0, 0);
+        cv::imshow("camera view", synth_mat);
 	}
 	else
 	{
 		CRect rect;
 		GetDlgItem(IDC_DEMO)->GetClientRect(&rect);
 		cv::resize(cap_mat_L, cap_mat_L, cv::Size(rect.Width(), rect.Height()));
-		cv::imshow("camera view", cap_mat_L);
+        cv::putText(cap_mat_L, fps, cv::Point(50, 900), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 255, 255), 2, 0, 0);
+        cv::imshow("camera view", cap_mat_L);
 	}
 
 	CDialogEx::OnTimer(nIDEvent);

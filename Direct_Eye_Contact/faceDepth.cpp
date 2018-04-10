@@ -11,7 +11,7 @@
 // return average value of a vector
 static void average_vec(std::vector<std::pair<int, double> >& temp, double& avg)
 {
-	double sum = 0;
+    double sum = 0;
 	for (auto t : temp)
 		sum += t.second;
 	avg = sum / temp.size();
@@ -72,7 +72,7 @@ bool notInsideContour(dlib::full_object_detection& shape, cv::Rect& rect)
 }
 
 
-// return rotation matrix based on euler angles
+// return rotation matrix based on Euler angles
 static void eulerAnglesToRotationMatrix(cv::Vec3f &theta, cv::Mat &output_matrix)
 {
 	theta[0] = theta[0] * CV_PI / 180.;
@@ -323,6 +323,7 @@ cv::Mat FaceDepth::facialLandmarkVis(bool left)
 
 		cv::rectangle(frame_facial, face, cv::Scalar(0, 255, 0), 0.7);
 
+#pragma omp parallel for
 		for (int i = 0; i < 68; i++)
 		{
 			circle(frame_facial, cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()),
@@ -337,6 +338,7 @@ cv::Mat FaceDepth::facialLandmarkVis(bool left)
 					cv::Point(shapes[0].part(i + 1).x(), shapes[0].part(i + 1).y()), cv::Scalar(0, 255, 0));
 			}
 		}
+
 		for (auto point : facial_circle)
 		{
 			for (int i = point[0]; i != point[1]; i++)
@@ -371,8 +373,7 @@ cv::Mat FaceDepth::drawLines(void)
 	img2.copyTo(img_res(cv::Rect(img1.cols, 0, img2.cols, img2.rows)));
 
 	//-- Draw lines between the corners
-#pragma omp parallel
-#pragma omp for
+#pragma omp parallel for
 	for (int i = 0; i < 68; i++)
 	{
 		cv::line(img_res, cv::Point(shapes_L.part(i).x(), shapes_L.part(i).y()),
@@ -396,6 +397,7 @@ void FaceDepth::levelDepth(void)
 	double level_val_0, level_val_1, level_val_2, level_val_3;
 	cv::Mat imgDepth64F = cv::Mat(imgLeft_col.rows, imgLeft_col.cols, CV_64F);
 
+#pragma omp parallel for
 	for (int k = 0; k < 68; k++)
 	{
 		points_L.push_back(cv::Point2i(shapes_L.part(k).x(), shapes_L.part(k).y()));
@@ -407,6 +409,7 @@ void FaceDepth::levelDepth(void)
 	int number = depth_data_index.size() / 3;
 
 	// the vectors are already sorted
+#pragma omp parallel for
 	for (int i = 0; i < depth_data_index.size(); i++)
 	{
 		if (i > number * 2)
@@ -417,10 +420,13 @@ void FaceDepth::levelDepth(void)
 			level_1.push_back(depth_data_index[i]);
 	}
 	
+
 	for (auto one : level_1)
 		points_1.push_back(points_L[one.first]);
+
 	for (auto two : level_2)
 		points_2.push_back(points_L[two.first]);
+
 	for (auto three : level_3)
 		points_3.push_back(points_L[three.first]);
 
@@ -501,6 +507,7 @@ void FaceDepth::levelDepthVis(cv::Mat& img, bool if_info)
 
 		int number = depth_data_index.size() / 3;
 
+#pragma omp parallel for schedule(static)
 		for (int i = 0; i < depth_data_index.size(); i++)
 		{
 			if (i > number * 2)
@@ -679,6 +686,7 @@ void FaceDepth::saveFile(cv::Mat img_mat, cv::Rect rect)
 bool FaceDepth::calcDepth(void)
 {
 	max_depth = 0, min_depth = 1000;
+#pragma omp parallel for
 	for (int i = 0; i < 68; ++i)
 	{
 		dispar = double(shapes_L.part(i).x() - shapes_R.part(i).x());
@@ -734,6 +742,7 @@ void FaceDepth::calcTranslation(bool vir_cam)
 
 	if (!original_pos.empty() && !virtual_pos.empty())
 	{
+#pragma omp parallel for schedule(static)
 		for (int i = 0; i < 68; i++)
 		{
 			//std::cout << i << "\t ori " << original_pos[i] << "\t vir " << virtual_pos[i] << std::endl;
@@ -753,23 +762,27 @@ void FaceDepth::viewSynthesis(cv::Mat& synthesis_view)
 {
 	double max_u = DBL_MIN, max_v = DBL_MIN;
 	double min_u = DBL_MAX, min_v = DBL_MAX;
-	double depth, x_cord, y_cord;
-	double X, Y, Z;
 
 	P = M1 * RvTv; // transformation matrix
 
-	cv::Vec3b bgr_pixel; // colour image 8UC3
-	cv::Mat xyz, uv;
 	cv::Mat img_big = cv::Mat(2000, 2000, CV_8UC3);
 	cv::Mat img_origin;
 	imgLeft_col.copyTo(img_origin);
 	imgLeft_col.copyTo(synthesis_view);
 	synthesis_view.convertTo(synthesis_view, CV_8UC3);
 
+    /*NESTED FOR LOOP PARALLELISM*/
+#pragma omp parallel
 	for (int i = 0; i < face_rect.width; ++i)
 	{
+#pragma omp for schedule(dynamic, 1)
 		for (int j = 0; j < face_rect.height; ++j)
 		{
+            double depth, x_cord, y_cord; // 2d coordinates
+            double X, Y, Z; // 3d coordinates
+            cv::Vec3b bgr_pixel; // colour image 8UC3
+            cv::Mat xyz, uv;
+
 			depth = depth_data_mat.ptr<double>(j)[i];
 			x_cord = face_rect.x + i;
 			y_cord = face_rect.y + j;
