@@ -472,19 +472,27 @@ void FaceDepth::levelDepthVis(cv::Mat& img, bool if_info)
 {
 	if (if_info)
 	{
-		float point_8, point_30, point_57;
+		float point_8, point_17, point_26, point_30, point_57;
 		point_8 = baseline * focal / (shapes_L.part(8).x() - shapes_R.part(8).x());
+        point_17 = baseline * focal / (shapes_L.part(17).x() - shapes_R.part(17).x());
+        point_26 = baseline * focal / (shapes_L.part(26).x() - shapes_R.part(26).x());
 		point_30 = baseline * focal / (shapes_L.part(30).x() - shapes_R.part(30).x());
 		point_57 = baseline * focal / (shapes_L.part(57).x() - shapes_R.part(57).x());
-		circle(img, cvPoint(shapes_L.part(8).x(), shapes_L.part(8).y()), 3, cv::Scalar(0, 255, 0), -1);
-		circle(img, cvPoint(shapes_L.part(30).x(), shapes_L.part(30).y()), 3, cv::Scalar(0, 255, 0), -1);
-		circle(img, cvPoint(shapes_L.part(57).x(), shapes_L.part(57).y()), 3, cv::Scalar(0, 255, 0), -1);
+        cv::circle(img, cvPoint(shapes_L.part(8).x(), shapes_L.part(8).y()), 3, cv::Scalar(0, 255, 0), -1); 
+        cv::circle(img, cvPoint(shapes_L.part(17).x(), shapes_L.part(17).y()), 3, cv::Scalar(0, 255, 0), -1);
+        cv::circle(img, cvPoint(shapes_L.part(26).x(), shapes_L.part(26).y()), 3, cv::Scalar(0, 255, 0), -1);
+        cv::circle(img, cvPoint(shapes_L.part(30).x(), shapes_L.part(30).y()), 3, cv::Scalar(0, 255, 0), -1);
+        cv::circle(img, cvPoint(shapes_L.part(57).x(), shapes_L.part(57).y()), 3, cv::Scalar(0, 255, 0), -1);
 
-		putText(img, std::to_string(point_8), cvPoint(shapes_L.part(8).x(),
+        cv::putText(img, std::to_string(point_8), cvPoint(shapes_L.part(8).x(),
 			shapes_L.part(8).y()), 1, 1, cv::Scalar(255, 0, 0), 1, 4);
-		putText(img, std::to_string(point_30), cvPoint(shapes_L.part(30).x(),
+        cv::putText(img, std::to_string(point_17), cvPoint(shapes_L.part(17).x(),
+            shapes_L.part(17).y()), 1, 1, cv::Scalar(255, 0, 0), 1, 4);
+        cv::putText(img, std::to_string(point_26), cvPoint(shapes_L.part(26).x(),
+            shapes_L.part(26).y()), 1, 1, cv::Scalar(255, 0, 0), 1, 4);
+        cv::putText(img, std::to_string(point_30), cvPoint(shapes_L.part(30).x(),
 			shapes_L.part(30).y()), 1, 1, cv::Scalar(255, 0, 0), 1, 4);
-		putText(img, std::to_string(point_57), cvPoint(shapes_L.part(57).x(),
+        cv::putText(img, std::to_string(point_57), cvPoint(shapes_L.part(57).x(),
 			shapes_L.part(57).y()), 1, 1, cv::Scalar(255, 0, 0), 1, 4);
 	}
 	else

@@ -63,8 +63,13 @@ BOOL CmainDlg::OnInitDialog()
 	mat_synth_standby = cv::imread("..\\Direct_Eye_Contact\\image\\standby_synth.png");
 
 	calib.readStringList();
-	if (face.readParameter())
-		already_calib = TRUE;
+    if (face.readParameter())
+    {
+        already_calib = TRUE;
+        initUndistortRectifyMap(face.M1, face.D1, face.R1, face.P1, imageSize, CV_16SC2, rmap[0][0], rmap[0][1]);
+        initUndistortRectifyMap(face.M2, face.D2, face.R2, face.P2, imageSize, CV_16SC2, rmap[1][0], rmap[1][1]);
+    }
+		
 
 	return TRUE;
 }
@@ -193,8 +198,8 @@ void CmainDlg::OnTimer(UINT_PTR nIDEvent)
 		try
 		{
 			// rectification
-			cv::undistort(cap_mat_L, cap_mat_L_calib, face.M1, face.D1);
-			cv::undistort(cap_mat_R, cap_mat_R_calib, face.M2, face.D2);
+            cv::remap(cap_mat_L, cap_mat_L_calib, rmap[0][0], rmap[0][1], cv::INTER_LINEAR);
+            cv::remap(cap_mat_R, cap_mat_R_calib, rmap[1][0], rmap[1][1], cv::INTER_LINEAR);
 		}
 		catch (std::exception)
 		{

@@ -24,6 +24,10 @@ private:
 	cv::Mat cap_mat_L, cap_mat_R;
 	cv::Mat cap_mat_L_calib, cap_mat_R_calib;
 	cv::Mat mat_depth_standby, mat_synth_standby;
+
+    // variables for rectification
+    cv::Mat rmap[2][2];
+    cv::Size imageSize = cv::Size(640, 480);
 	
 	Calibrate calib;
 	FaceDepth face;
