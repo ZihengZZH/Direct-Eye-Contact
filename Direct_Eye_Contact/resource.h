@@ -8,6 +8,9 @@
 #define IDB_PNG                         108
 #define IDI_ICON                        109
 #define IDD_DEMO                        110
+#define IDB_SPLASH                      113
+#define IDD_SPLASH                      114
+#define IDB_SP                          116
 #define IDC_CAM_L                       1001
 #define ID_OPEN                         1002
 #define IDC_CAM_R                       1003
@@ -37,7 +40,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        112
+#define _APS_NEXT_RESOURCE_VALUE        117
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           101

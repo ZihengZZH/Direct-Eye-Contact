@@ -157,6 +157,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="calib.h" />
+    <ClInclude Include="CSplashDlg.h" />
     <ClInclude Include="demoDlg.h" />
     <ClInclude Include="faceDepth.h" />
     <ClInclude Include="mainDlg.h" />
@@ -166,6 +167,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calib.cpp" />
+    <ClCompile Include="CSplashDlg.cpp" />
     <ClCompile Include="demoDlg.cpp" />
     <ClCompile Include="faceDepth.cpp" />
     <ClCompile Include="main.cpp" />
@@ -185,6 +187,8 @@
     <Image Include="image\icon.png" />
     <Image Include="image\info.bmp" />
     <Image Include="image\MFC.ico" />
+    <Image Include="image\splash.bmp" />
+    <Image Include="image\splash.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

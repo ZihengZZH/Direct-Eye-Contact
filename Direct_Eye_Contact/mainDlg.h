@@ -13,63 +13,63 @@
 class CmainDlg :public CDialogEx
 {
 public:
-	CmainDlg();
-	enum { IDD = IDD_MAIN };
-	BOOL OnInitDialog();
-	void EndDialog(int nResult);
+    CmainDlg();
+    enum { IDD = IDD_MAIN };
+    BOOL OnInitDialog();
+    void EndDialog(int nResult);
 
 private:
-	cv::VideoCapture cap_L; // left camera 
-	cv::VideoCapture cap_R; // right camera
-	cv::Mat cap_mat_L, cap_mat_R;
-	cv::Mat cap_mat_L_calib, cap_mat_R_calib;
-	cv::Mat mat_depth_standby, mat_synth_standby;
+    cv::VideoCapture cap_L; // left camera 
+    cv::VideoCapture cap_R; // right camera
+    cv::Mat cap_mat_L, cap_mat_R;
+    cv::Mat cap_mat_L_calib, cap_mat_R_calib;
+    cv::Mat mat_depth_standby, mat_synth_standby;
 
     // variables for rectification
     cv::Mat rmap[2][2];
     cv::Size imageSize = cv::Size(640, 480);
-	
-	Calibrate calib;
-	FaceDepth face;
-	BOOL if_record, if_calib, if_landmarks, if_info, if_depth, if_synth;
-	BOOL already_calib;
 
-	// MFC necessary variables
-	CEdit* pBoxOne;
-	CString m_str;
-	CImage m_logo;
-	CFont m_font, m_font_small;
-	HICON m_hIcon;
+    Calibrate calib;
+    FaceDepth face;
+    BOOL if_record, if_calib, if_landmarks, if_info, if_depth, if_synth;
+    BOOL already_calib;
 
-	enum
-	{
-		USE_LEVEL = 0,
-		USE_DELAUNAY
-	};
-	int depth_method = 1; // delaunay over level
+    // MFC necessary variables
+    CEdit* pBoxOne;
+    CString m_str;
+    CImage m_logo;
+    CFont m_font, m_font_small;
+    HICON m_hIcon;
 
+    enum
+    {
+        USE_LEVEL = 0,
+        USE_DELAUNAY
+    };
+    int depth_method = 1; // delaunay over level
 
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);
 
 protected:
-	DECLARE_MESSAGE_MAP()
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+protected:
+    DECLARE_MESSAGE_MAP()
 
 public:
-	afx_msg void OnBnClickedOpen();
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	afx_msg void OnBnClickedRecord();
-	afx_msg void OnBnClickedCalib();
-	afx_msg void OnBnClickedDepth();
-	afx_msg void OnBnClickedFacial();
-	afx_msg void OnBnClickedInfo();
-	afx_msg void OnBnClickedClose();
-	afx_msg void OnBnClickedSynth();
-	afx_msg void OnBnClickedDemo();
+    afx_msg void OnBnClickedOpen();
+    afx_msg void OnTimer(UINT_PTR nIDEvent);
+    afx_msg void OnBnClickedRecord();
+    afx_msg void OnBnClickedCalib();
+    afx_msg void OnBnClickedDepth();
+    afx_msg void OnBnClickedFacial();
+    afx_msg void OnBnClickedInfo();
+    afx_msg void OnBnClickedClose();
+    afx_msg void OnBnClickedSynth();
+    afx_msg void OnBnClickedDemo();
 
-	CStatic m_Logo;
-	CStatic m_icon;
-	CStatic m_info;
+    CStatic m_Logo;
+    CStatic m_icon;
+    CStatic m_info;
 
 };
 

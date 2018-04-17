@@ -103,6 +103,13 @@ BEGIN
     EDITTEXT        IDC_SIZE,714,600,132,14,ES_AUTOHSCROLL
 END
 
+IDD_SPLASH DIALOGEX 0, 0, 471, 345
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         IDB_SP,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,7,7,457,331
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -127,6 +134,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 628
     END
+
+    IDD_SPLASH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 464
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 338
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -146,6 +161,11 @@ BEGIN
     0
 END
 
+IDD_SPLASH AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -156,6 +176,8 @@ IDB_ICON                BITMAP                  "image\\icon.bmp"
 
 IDB_INFO                BITMAP                  "image\\info.bmp"
 
+IDB_SP                  BITMAP                  "image\\splash.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -163,6 +185,8 @@ IDB_INFO                BITMAP                  "image\\info.bmp"
 //
 
 IDB_PNG                 PNG                     "image\\icon.png"
+
+IDB_SPLASH              PNG                     "image\\splash.png"
 
 
 /////////////////////////////////////////////////////////////////////////////
